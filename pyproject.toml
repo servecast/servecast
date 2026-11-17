@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "servecast"
+version = "0.0.1"
+description = "Predicts LLM serving performance (TTFT, TPOT, throughput) on a GPU running vLLM. This release only reserves the name."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+authors = [{ name = "The ServeCast authors" }]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Homepage = "https://github.com/servecast/servecast"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/servecast"]

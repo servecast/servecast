@@ -28,15 +28,18 @@
 .md-typeset .md-button--primary { background: var(--sc-blue-ink); border-color: var(--sc-blue-ink); color: #fff; }
 
 /* the home page's "What you can do with it": Predict as the large card, with the numbers of the page's own examples,
-   and the other three beside it. Each card is a link to its guide (the title's link covers the card). */
-.sc-bento { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); margin: 1.2rem 0 2.4rem; }
+   and the other three beside it. Each card is a link to its guide (the title's link covers the card). The cards sit
+   on the tinted ground of How it works, with its card colour, edge and shadow (the --sc-* colours below). */
+.sc-bento { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); margin: 1.2rem 0 2.4rem; padding: 1rem;
+            border-radius: 0.9rem; background: var(--sc-canvas); }
 @media screen and (min-width: 60em) {
   .sc-bento { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
   .sc-bento > .sc-feature { grid-row: 1 / span 3; }
 }
 .sc-card { position: relative; display: flex; flex-direction: column; gap: 0.7rem; padding: 1.3rem 1.35rem 1.25rem;
-           border: 1px solid var(--md-default-fg-color--lightest); border-radius: 0.9rem;
-           background: var(--md-default-bg-color); transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+           border: 1px solid var(--sc-line); border-radius: 0.9rem; background: var(--sc-card);
+           box-shadow: 0 2px 6px rgba(15, 23, 32, .10);
+           transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
 .sc-card:hover { transform: translateY(-2px); border-color: var(--sc-blue); box-shadow: 0 10px 28px -14px rgba(11, 102, 194, .45); }
 .md-typeset .sc-card p { margin: 0; }
 .sc-compact { flex-direction: row; align-items: flex-start; gap: 1rem; }
@@ -58,7 +61,7 @@
   background: #0f1720; color: #e6edf3; font-size: 0.66rem; white-space: normal; user-select: all; }
 .md-typeset code.sc-cmd::before { content: "$ "; color: var(--sc-blue); }
 .md-typeset .sc-feature { background: linear-gradient(155deg, rgba(48, 162, 255, .11), transparent 60%),
-                          var(--md-default-bg-color); }
+                          var(--sc-card); }
 .md-typeset .sc-feature a.sc-title { font-size: 1.35rem; }
 .sc-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; margin-top: 0.3rem; }
 .sc-stat { display: flex; flex-direction: column; padding: 0.7rem 0.8rem; border: 1px solid var(--md-default-fg-color--lightest);
@@ -77,11 +80,14 @@
 [data-md-color-scheme="slate"] .md-typeset .sc-ic { background: rgba(48, 162, 255, .17); color: #7cc4ff; }
 [data-md-color-scheme="slate"] .sc-k { color: #7cc4ff; }
 [data-md-color-scheme="slate"] .md-typeset code.sc-cmd { background: #1a212b; border: 1px solid rgba(255, 255, 255, .08); }
-/* on a phone: one tile per row, label, value and percentile side by side; larger labels on the curve */
+/* on a phone: a thinner ground and card padding, one tile per row, label, value and percentile side by side; larger
+   labels on the curve. Measured at 360 and 390 px wide, no tile overflows (with 6.2rem labels they did at 360 px). */
 @media screen and (max-width: 30em) {
+  .sc-bento { padding: 0.4rem; }
+  .sc-card { padding-left: 1rem; padding-right: 1rem; }
   .sc-stats { grid-template-columns: minmax(0, 1fr); gap: 0.4rem; }
   .sc-stat { flex-direction: row; align-items: baseline; gap: 0.6rem; padding: 0.5rem 0.7rem; }
-  .sc-k { flex: none; width: 6.2rem; }
+  .sc-k { flex: none; width: 4.6rem; }
   .sc-v { font-size: 1.1rem; white-space: nowrap; }
   .sc-s { margin-left: auto; white-space: nowrap; }
   .sc-curve text { font-size: 14px; }

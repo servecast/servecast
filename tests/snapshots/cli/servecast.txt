@@ -1,0 +1,38 @@
+                                                                                                    
+ Usage: servecast [OPTIONS] COMMAND [ARGS]...                                                       
+                                                                                                    
+ Predict how an LLM serves on a GPU running vLLM: time to first token, time per output token and    
+ throughput, from a calibrated cost law and a workload.                                             
+                                                                                                    
+ Start here                                                                                         
+                                                                                                    
+                                                                                                    
+  servecast manifest init --template predict > m.yaml                                               
+  servecast predict -c m.yaml                                                                       
+  servecast replicate list                                                                          
+                                                                                                    
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --version          <bool>  Print the version and exit.                                           │
+│ --debug            <bool>  Show the full traceback when a command fails.                         │
+│ --help     -h      <bool>  Show this message and exit.                                           │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Predict and calibrate ──────────────────────────────────────────────────────────────────────────╮
+│ predict     Predict serving metrics for one deployment and workload.                             │
+│ calibrate   Fit a cost law to profiling data and save the calibration.                           │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Measure on a GPU ───────────────────────────────────────────────────────────────────────────────╮
+│ compare     Score a prediction against a measurement of the same manifest.                       │
+│ profile     Measure on an NVIDIA GPU with vLLM.                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Helpers ────────────────────────────────────────────────────────────────────────────────────────╮
+│ doctor      Check Python, the GPU, the driver and vLLM.                                          │
+│ workload    Inspect a trace, or sample a workload into requests.                                 │
+│ manifest    Create, check and explain manifests.                                                 │
+│ list        Show what is known and installed.                                                    │
+│ completion  Shell completion for bash, zsh and fish.                                             │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Reproduce the paper ────────────────────────────────────────────────────────────────────────────╮
+│ replicate   Reproduce the paper with its pinned versions and data.                               │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+

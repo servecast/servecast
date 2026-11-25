@@ -1,0 +1,22 @@
+                                                                                                    
+ Usage: servecast manifest explain [OPTIONS] {PATH}                                                 
+                                                                                                    
+ Explain one manifest field: meaning, type, default and allowed values.                             
+                                                                                                    
+╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮
+│ *    PATH      <str>  A dotted field path, e.g. traffic.load.concurrency.                        │
+│                       [required]                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast manifest explain traffic.load.think_time_ms                                             
+                                                                                                    
+                                                                                                    
+ See also: servecast manifest init.                                                                 
+                                                                                                    
+

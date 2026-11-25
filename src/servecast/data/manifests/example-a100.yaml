@@ -1,0 +1,14 @@
+engine:
+  model: Qwen/Qwen2.5-7B
+  hardware: a100_sxm_40gb
+  workers:
+    aggregated:
+      kv_cache:
+        capacity: {blocks: 23488}
+calibration:
+  use: my-a100
+  transfer: true
+traffic:
+  source: {type: trace, paths: [azure-conversation]}
+  load: {type: concurrency, concurrency: 64, think_time_ms: 1000}
+  stop: {steady_state: {}}

@@ -1,0 +1,34 @@
+                                                                                                    
+ Usage: servecast compare [OPTIONS] {PREDICTION_DIR} {MEASUREMENT_DIR}                              
+                                                                                                    
+ Score a prediction against a measurement of the same manifest.                                     
+                                                                                                    
+ Refuses unless both come from the same manifest, request pool, sampler and estimator. For each     
+ load point, prints the signed error of every metric next to the measurement's confidence interval, 
+ and flags a clock or KV-capacity mismatch.                                                         
+                                                                                                    
+╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮
+│ *    PREDICTION_DIR       <path>  What predict wrote.                                            │
+│                                   [required]                                                     │
+│ *    MEASUREMENT_DIR      <path>  What profile serving wrote.                                    │
+│                                   [required]                                                     │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --output        FILE          Where comparison.json goes (default inside PREDICTION_DIR).        │
+│ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
+│                               [default: table]                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast compare servecast-output servecast-measurement                                          
+  servecast compare prediction/ measurement/ --format json                                          
+                                                                                                    
+                                                                                                    
+ See also: servecast predict, servecast profile serving.                                            
+                                                                                                    
+

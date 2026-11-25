@@ -1,0 +1,147 @@
+{
+  "schema": "servecast-components/1",
+  "about": [
+    "One entry per component ServeCast can select, by its name: eight hexadecimal characters starting with a letter.",
+    "A name never changes meaning: the same name always gives the same numbers. A change that moves them is a new entry with a new name.",
+    "released is the month the entry was released: `versions: <month>` selects each component's newest entry up to that month, and the month also names the entry in `versions`, as ids did before names.",
+    "default marks the entry used when `versions` does not choose one. A cost law's entry includes its calibration procedure.",
+    "summary is printed beside the name; description, calibration, parameters and paper explain it in full."
+  ],
+  "cost_law": {
+    "d9cbf1d3": {
+      "summary": "The paper's law, calibrated per LLM and GPU: three roofline terms (dense layers, vocabulary, attention) plus a residual per iteration and per decoding request.",
+      "released": "2026-10",
+      "in_paper": true,
+      "default": false,
+      "calibrated_per": "llm_and_gpu",
+      "description": "An iteration runs three kinds of kernels in series, each costing the larger of its memory time and its arithmetic time: dense layers max(W/B, 2PM/(eta_c F)), vocabulary max(H/B, 2dVR/(eta_c F)), attention max(G_mix kv K/B, 4dLA/(eta_c F)). The residual (kappa + beta_req n_d) is added and scaled with the SM clock. M is the row count padded up to vLLM's CUDA-graph capture size (largest 512); G_mix is the query heads per KV head on an iteration that mixes prefill and decode, 1 otherwise.",
+      "calibration": {
+        "measures": "a probe of synthetic prefill, decode and mixed batches served by the real engine at a locked clock",
+        "fit": "weighted nonlinear least squares on relative errors; class weights decode 0.4749, prefill 0.0110, mixed 0.5141",
+        "fitted": [
+          "eta_c",
+          "kappa",
+          "beta_req"
+        ],
+        "pinned": {
+          "eta_w": "1 (memory at the datasheet bandwidth)",
+          "eta_kv": "not used: the KV read runs at eta_w"
+        }
+      },
+      "parameters": {
+        "eta_c": "fraction of the peak arithmetic rate the kernels reach (dimensionless)",
+        "kappa": "fixed latency per iteration, ms at the calibration clock",
+        "beta_req": "latency per decoding request, ms at the calibration clock"
+      },
+      "paper": "Section 'Iteration Duration' (T = T1 + T2 + T3 + (c_0 + c_d n_d)/f); Appendix 'Architecture Counts and Timing-Parameter Estimation'",
+      "paper_symbols": {
+        "eta_c": "η_c",
+        "kappa": "c_0/f_0",
+        "beta_req": "c_d/f_0",
+        "G_mix": "γ"
+      },
+      "code": [
+        "servecast.model.law.v2026_10",
+        "servecast.calibrate.procedure.v2026_10"
+      ]
+    },
+    "c62ebe75": {
+      "summary": "Calibrated once per GPU, without profiling the LLM: the paper's form with a per-layer latency, a per-token cost, its own KV-read efficiency, and eta_c read off a grid of synthetic layers.",
+      "released": "2026-11",
+      "in_paper": false,
+      "default": true,
+      "calibrated_per": "gpu",
+      "description": "The paper's three roofline terms with four changes: the KV read has its own fitted efficiency eta_kv; the fixed latency is per layer (kappa x L); one more kernel kind in series, the per-token elementwise work tau_tok x M x d x L, which does not follow the clock; and eta_c depends on the GEMM shapes, read off the GPU's grid of synthetic layers (width d, FFN ratio d_ff/d) bilinearly and clamped to the grid, or from the curve 1/eta_c = a + b/(parameters per layer) when every grid shape lies within 0.03 of it. The per-request residual is pinned to zero.",
+      "calibration": {
+        "measures": "a GEMM grid (one synthetic layer per (d, d_ff/d), timed at 1 and 2,048 rows) and probes of synthetic models with random weights served by the real engine, at one locked clock",
+        "fit": "the paper's least squares over the synthetic models' cells pooled, each model carrying the same total weight",
+        "fitted": [
+          "eta_kv",
+          "kappa",
+          "tau_tok"
+        ],
+        "pinned": {
+          "eta_w": "from the grid's one-row times",
+          "eta_c": "the grid's mean over the synthetic models during the fit; an LLM's own value is read off the grid at prediction",
+          "beta_req": "0"
+        }
+      },
+      "parameters": {
+        "eta_w": "memory efficiency of the weight read, from the grid",
+        "eta_kv": "memory efficiency of the KV read, fitted",
+        "eta_c": "arithmetic efficiency, per LLM, read off the grid",
+        "kappa": "fixed latency per layer per iteration, ms at the calibration clock",
+        "beta_req": "pinned to 0",
+        "tau_tok": "per-token elementwise cost, picoseconds per row x width x layer, not scaled with the clock"
+      },
+      "paper": null,
+      "code": [
+        "servecast.model.law.v2026_11",
+        "servecast.calibrate.procedure.v2026_11"
+      ]
+    }
+  },
+  "population_model": {
+    "f2f5d726": {
+      "summary": "The paper's population model with eviction: a census of the requests, advanced one synchronous iteration at a time with the engine's admission and eviction rules.",
+      "released": "2026-10",
+      "in_paper": true,
+      "default": true,
+      "description": "State between iterations: clients thinking; requests staged (arrived during the current or the previous iteration); a FIFO waiting for admission, with at most one blocked candidate at its head; the prefill head (one request whose prompt is partly computed, with its progress); the decode census (each request in a phase of its output-length chain, with its exact context). One synchronous jump per iteration: evictions until the iteration's KV growth fits, then admissions (token budget first, then memory), then the iteration runs for the cost law's T(composition) while thinking clients submit after exponential think times of mean Z; at its end every decoding request emits a token and moves phase or finishes, the prefill head advances, and staged arrivals become admissible one iteration later. Eviction follows the engine: the prefill head first (its progress restarts), otherwise a decoding request from the youngest occupied admission cohort (128 cohorts kept distinct); a victim returns to the head of the FIFO and recomputes its whole context. Dynamics, bookkeeping, phase moves, victims and arriving types draw from separate random streams.",
+      "paper": "Section 'Model State and Evolution'; Appendix 'Formal Model'",
+      "code": [
+        "servecast.model.population.v2026_10"
+      ]
+    }
+  },
+  "workload_fitter": {
+    "cd88bc61": {
+      "summary": "The paper's workload law: prompt classes with fixed lengths and output lengths from a chain of geometric phases, with their joint law, fitted to a trace.",
+      "released": "2026-10",
+      "in_paper": true,
+      "default": true,
+      "description": "A request's type is (a, j): a prompt class a of deterministic length p_a (never a multiple of the KV block size) and the phase j it enters decoding in; the output length emerges from a hyper-Erlang chain (branches of geometric stages in series). The joint law pi[a, j] couples them. Fitted by maximum likelihood (EM on binned counts), the stages by greedy ascent up to a phase cap (default 12, at most 256), and the structure selected on held-out halves by the one-standard-error rule (fewest phases, then fewest groups, then fewest branches).",
+      "paper": "Section 'Workload and Request Lengths'; Appendix 'Trace-Based Workload Construction'",
+      "code": [
+        "servecast.model.workload.v2026_10"
+      ]
+    }
+  },
+  "length_sampler": {
+    "fe3db391": {
+      "summary": "Synthetic lengths from a mean and an optional variance, matched by a discrete phase-type law of the family the population model represents (not in the paper, which used traces).",
+      "released": "2026-11",
+      "in_paper": false,
+      "default": true,
+      "description": "Mean only: a geometric on {1, 2, ...}. A larger variance: two geometrics with balanced means, mixed. A smaller variance: a mixture of sums of k-1 and k geometric stages with a common success probability. Input and output lengths are independent; a pair longer than the context is drawn again, so the realised moments can differ from the requested ones. A coefficient of variation below 1/16 is refused (the population model's 256-phase limit).",
+      "paper": null,
+      "code": [
+        "servecast.core.sampler.v2026_11"
+      ]
+    }
+  },
+  "estimator": {
+    "cabeb968": {
+      "summary": "The paper's stopping rule: transient removed by MSER-5, batch-means 95 % intervals, and Little's law closing on the window.",
+      "released": "2026-10",
+      "in_paper": true,
+      "default": false,
+      "description": "At each checkpoint of a geometric schedule: remove the initial transient with MSER-5 (capped at 40 % of the completions); build the window from the last discarded completion to the last one; estimate each metric's mean with a 95 % batch-means interval over 32 non-overlapping batches, usable only when the batch means are uncorrelated enough; stop when every metric's relative half-width is under its target and Little's law closes within 1 %. Metrics judged: inverse throughput, response time, TTFT, TPOT.",
+      "paper": "Section 'Evaluation', 'Experimental Setup' (transient removal and batch means)",
+      "code": [
+        "servecast.core.estimator.v2026_10"
+      ]
+    },
+    "c3ad4006": {
+      "summary": "The paper's stopping rule, plus the 95th percentiles of TTFT and TPOT as judged metrics when the manifest sets a target for them.",
+      "released": "2026-11",
+      "in_paper": false,
+      "default": true,
+      "description": "With a <metric>_p95 target, that metric's 95th percentile is estimated like the means: Woodruff's interval with a batch-means variance (the indicator 1{x <= q} through the same 32-batch interval and mixing rule). Without such a target it is exactly the paper's rule.",
+      "paper": null,
+      "code": [
+        "servecast.core.estimator.v2026_11"
+      ]
+    }
+  }
+}

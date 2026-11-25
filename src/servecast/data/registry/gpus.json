@@ -1,0 +1,29 @@
+{
+  "schema": "servecast-gpus/1",
+  "gpus": {
+    "a100_sxm_40gb": {
+      "device_name": "NVIDIA A100-SXM4-40GB",
+      "memory_gib": 40,
+      "sm_count": 108,
+      "peak_flop_per_s": 312000000000000.0,
+      "memory_bandwidth_bytes_per_s": 1555000000000.0,
+      "boost_clock_mhz": 1410
+    },
+    "h100_sxm": {
+      "device_name": "NVIDIA H100 80GB HBM3",
+      "memory_gib": 80,
+      "sm_count": 132,
+      "peak_flop_per_s": 989500000000000.0,
+      "memory_bandwidth_bytes_per_s": 3350000000000.0,
+      "boost_clock_mhz": 1830
+    },
+    "rtx_3090_ti": {
+      "device_name": "NVIDIA GeForce RTX 3090 Ti",
+      "memory_gib": 24,
+      "sm_count": 84,
+      "peak_flop_per_s": 80000000000000.0,
+      "memory_bandwidth_bytes_per_s": 1008000000000.0,
+      "boost_clock_mhz": 1860
+    }
+  }
+}

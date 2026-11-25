@@ -1,0 +1,100 @@
+# The documentation site: `zensical serve` previews it, `zensical build` writes it to site/.
+[project]
+site_name = "ServeCast"
+site_description = "Predict how vLLM serves an LLM on a GPU: throughput, time to first token and time per output token, before you run it."
+site_url = "https://servecast.github.io/servecast/"
+repo_url = "https://github.com/servecast/servecast"
+repo_name = "servecast/servecast"
+copyright = "ServeCast is licensed under the Apache License 2.0."
+
+nav = [
+  { "Home" = "index.md" },
+  { "Install" = "install.md" },
+  { "Get started" = "get-started.md" },
+  { "Guides" = [
+    { "Predict" = "guides/predict.md" },
+    { "On your GPU" = "guides/calibrate.md" },
+    { "Reproduce the paper" = "guides/reproduce.md" },
+  ] },
+  { "Concepts" = [
+    { "How ServeCast models vLLM" = "concepts.md" },
+    { "Limits" = "limits.md" },
+  ] },
+  { "Reference" = [
+    { "Command line" = "reference/cli.md" },
+    { "Files and folders" = "reference/files.md" },
+    { "File formats" = "reference/formats.md" },
+  ] },
+  { "Cite" = "cite.md" },
+]
+
+extra_css = ["stylesheets/servecast.css"]
+
+[project.theme]
+language = "en"
+logo = "assets/logo.svg"
+favicon = "assets/favicon.svg"
+features = [
+  "content.code.copy",
+  "content.code.annotate",
+  "content.tabs.link",
+  "content.tooltips",
+  "navigation.tabs",
+  "navigation.tabs.sticky",
+  "navigation.sections",
+  "navigation.indexes",
+  "navigation.footer",
+  "navigation.path",
+  "navigation.top",
+  "navigation.tracking",
+  "navigation.instant",
+  "search.highlight",
+  "toc.follow",
+]
+
+[project.theme.font]
+text = "Source Sans 3"
+code = "IBM Plex Mono"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+primary = "white"
+accent = "blue"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+primary = "black"
+accent = "blue"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to light mode"
+
+[project.extra]
+# no "Made with Zensical" line in the footer
+generator = false
+
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/servecast/servecast"
+
+[project.markdown_extensions]
+abbr = {}
+admonition = {}
+attr_list = {}
+def_list = {}
+md_in_html = {}
+tables = {}
+toc.permalink = true
+pymdownx.details = {}
+pymdownx.emoji.emoji_generator = "zensical.extensions.emoji.to_svg"
+pymdownx.emoji.emoji_index = "zensical.extensions.emoji.twemoji"
+pymdownx.highlight.anchor_linenums = true
+pymdownx.highlight.pygments_lang_class = true
+pymdownx.inlinehilite = {}
+pymdownx.superfences.custom_fences = [
+  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
+]
+pymdownx.tabbed.alternate_style = true

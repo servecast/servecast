@@ -1,0 +1,35 @@
+                                                                                                    
+ Usage: servecast workload sample [OPTIONS]                                                         
+                                                                                                    
+ Draw the request pool of a manifest's workload and write it.                                       
+                                                                                                    
+ The same seeded pool that predict and profile serving draw from; prints the requested and the      
+ realized moments side by side.                                                                     
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Inputs ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ *  --config  -c      MANIFEST    The manifest: a YAML file, or the name of one that ships with   │
+│                                  ServeCast (servecast list manifests).                           │
+│                                  [required]                                                      │
+│    --set             PATH=VALUE  Override one manifest field; the value is read as YAML.         │
+│                                  Repeatable, applied left to right, then the whole manifest is   │
+│                                  validated.                                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --out           FILE          Where the pool goes.                                               │
+│                               [default: pool.jsonl]                                              │
+│ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
+│                               [default: table]                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast workload sample -c m.yaml --out pool.jsonl                                              
+                                                                                                    
+                                                                                                    
+ See also: servecast predict, servecast profile serving.                                            
+                                                                                                    
+

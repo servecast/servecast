@@ -1,0 +1,25 @@
+{
+ "schema": "servecast-calibration/2",
+ "name": "rtx_3090_ti/d9cbf1d3/deepseek-llm-7b-base",
+ "law": {
+  "cost_law": "d9cbf1d3",
+  "parameters": {
+   "eta_w": 1.0000004999999985,
+   "eta_kv": 1.0000004999999985,
+   "eta_c": 0.6973335952073394,
+   "kappa": 5.028935569302327,
+   "beta_req": 0.16553916752994308
+  }
+ },
+ "conditions": {
+  "gpu": "rtx_3090_ti",
+  "gpu_spec": {
+   "peak_flop_per_s": 80000000000000.0,
+   "memory_bandwidth_bytes_per_s": 1008000000000.0,
+   "boost_clock_mhz": 1860
+  },
+  "clock_mhz": 1500.0,
+  "tensor_parallel": 1,
+  "fitted_on": "deepseek-ai/deepseek-llm-7b-base"
+ }
+}

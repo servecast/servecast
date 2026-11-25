@@ -1,0 +1,38 @@
+# Every predicted load point of the reference data (1,944 of the paper, 108 of the newest law) and the slow refits,
+# recomputed bit for bit. Started by hand; it takes hours. Add a nightly schedule once the repository is public, when
+# hosted runners cost nothing.
+name: parity-full
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  parity:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Install the package at the versions in constraints/ci.txt
+        run: python -m pip install -c constraints/ci.txt -e . pytest
+      - name: The slow component checks (refits of the three traces)
+        run: SERVECAST_EXACT=1 SERVECAST_SLOW=1 python -m pytest -q -m exact tests/components
+      - name: Every load point of both pipelines
+        if: always()
+        run: |
+          python tools/parity.py newest --jobs 4 --out parity-newest.json
+          python tools/parity.py paper --jobs 4 --out parity-paper.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: parity-${{ matrix.os }}
+          path: parity-*.json

@@ -1,0 +1,15 @@
+                                                                                                    
+ Usage: servecast profile [OPTIONS] COMMAND [ARGS]...                                               
+                                                                                                    
+ Measure on a real GPU: Linux, an NVIDIA GPU of compute capability 8.0 or newer, and vLLM 0.25.1,   
+ installed with pip install 'servecast[profile]'; servecast doctor checks them. Every other command 
+ runs on any computer.                                                                              
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮
+│ calibration  Probe the cost law on this GPU and write its profiling data.                        │
+│ serving      Serve the workload with vLLM on this GPU and measure it.                            │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+

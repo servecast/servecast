@@ -1,0 +1,25 @@
+                                                                                                    
+ Usage: servecast doctor [OPTIONS]                                                                  
+                                                                                                    
+ Check Python, the GPU, the driver and vLLM.                                                        
+                                                                                                    
+ Prints what was found and, for each profile command, whether it can run on this computer or why    
+ not. Every other command runs on any computer.                                                     
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
+│                               [default: table]                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast doctor                                                                                  
+                                                                                                    
+                                                                                                    
+ See also: servecast profile calibration.                                                           
+                                                                                                    
+

@@ -1,0 +1,64 @@
+                                                                                                    
+ Usage: servecast predict [OPTIONS]                                                                 
+                                                                                                    
+ Predict serving metrics for one deployment and workload.                                           
+                                                                                                    
+ Reads the manifest, resolves the calibration and the component versions, simulates the closed      
+ workload to steady state, and writes prediction.json: means, P95s and 95 % confidence intervals,   
+ with the components that made them. When the manifest gives profiling data instead of a            
+ calibration, the calibration is fitted first.                                                      
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Inputs ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ *  --config  -c      MANIFEST     The manifest: a YAML file, or the name of one that ships with  │
+│                                   ServeCast (servecast list manifests).                          │
+│                                   [required]                                                     │
+│    --with            CALIBRATION  A calibration name or path. Same as --set                      │
+│                                   calibration.use=CALIBRATION.                                   │
+│    --to              LLM          The LLM to predict with the calibration, a transfer: a Hugging │
+│                                   Face id or a local directory holding config.json. Same as      │
+│                                   --set engine.model=LLM --set calibration.transfer=true.        │
+│    --set             PATH=VALUE   Override one manifest field; the value is read as YAML.        │
+│                                   Repeatable, applied left to right, then the whole manifest is  │
+│                                   validated.                                                     │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Workload ───────────────────────────────────────────────────────────────────────────────────────╮
+│ --sweep        PATH=V1,V2,...  Repeat for each value of ONE field, e.g.                          │
+│                                traffic.load.concurrency=40,80,120.                               │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --output-dir                 DIR           Where the results go. A non-empty directory is        │
+│                                            refused without --overwrite.                          │
+│                                            [default: servecast-output]                           │
+│ --overwrite                  <bool>        Replace the known output files in a non-empty output  │
+│                                            directory.                                            │
+│ --format                     <table|json>  How the summary is printed. Files on disk do not      │
+│                                            change.                                               │
+│                                            [default: table]                                      │
+│ --capture-per-request        <bool>        Also write requests.jsonl, one record per simulated   │
+│                                            request.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Advanced ───────────────────────────────────────────────────────────────────────────────────────╮
+│ --jobs           <int range> [x>=1]  Load points of a sweep run in parallel processes; the       │
+│                                      numbers do not change.                                      │
+│                                      [default: 1]                                                │
+│ --timeout        SECONDS [x>=1]      Stop the workload-law fit, or a load point that has not     │
+│                                      converged, after this long: a stopped fit ends the command, │
+│                                      a stopped point's numbers are written, marked as not        │
+│                                      converged, and either way the command exits with status     │
+│                                      124.                                                        │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast predict -c m.yaml                                                                       
+  servecast predict -c m.yaml --with a100_sxm_40gb/c62ebe75 --to Qwen/Qwen2.5-7B                    
+  servecast predict -c m.yaml --sweep traffic.load.concurrency=40,80,120 --format json              
+                                                                                                    
+                                                                                                    
+ See also: servecast compare, servecast manifest explain, servecast list calibrations.              
+                                                                                                    
+

@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use ServeCast, please cite the paper that introduced it."
+title: "ServeCast"
+type: software
+license: Apache-2.0
+repository-code: "https://github.com/servecast/servecast"
+authors:
+  - family-names: Incerto
+    given-names: Emilio
+  - family-names: Yang
+    given-names: Lishan
+  - family-names: Sun
+    given-names: Yu
+  - family-names: Tribastone
+    given-names: Mirco
+preferred-citation:
+  type: article
+  title: "ServeCast: Predicting LLM Serving Throughput and Latency Across Models from Microbenchmarks"
+  authors:
+    - family-names: Incerto
+      given-names: Emilio
+    - family-names: Yang
+      given-names: Lishan
+    - family-names: Sun
+      given-names: Yu
+    - family-names: Tribastone
+      given-names: Mirco
+  year: 2026
+  journal: "arXiv preprint arXiv:XXXX.XXXXX"
+  url: "https://arxiv.org/abs/XXXX.XXXXX"

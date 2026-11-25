@@ -1,0 +1,24 @@
+                                                                                                    
+ Usage: servecast manifest schema [OPTIONS]                                                         
+                                                                                                    
+ Print the JSON Schema of the manifest or of an output file.                                        
+                                                                                                    
+ Point an editor at the manifest's schema to get completion and checks while writing it.            
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --kind          <manifest|pool|profiling-data|probe|gem  Which file's schema.                    │
+│                 m|calibration|prediction|measurement|co  [default: manifest]                     │
+│                 mparison>                                                                        │
+│ --help  -h      <bool>                                   Show this message and exit.             │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast manifest schema > servecast.schema.json                                                 
+  servecast manifest schema --kind prediction                                                       
+                                                                                                    
+                                                                                                    
+ See also: servecast manifest validate.                                                             
+                                                                                                    
+

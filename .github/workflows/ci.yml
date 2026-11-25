@@ -1,0 +1,136 @@
+# Checks every push to main and every pull request.
+# privacy: nothing that identifies a person, a machine or a credential may enter the tracked tree.
+# package: the tests pass, the layer contract in pyproject.toml holds and the released modules are unchanged.
+# parity-*: the model reproduces the reference data.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  privacy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Test the scanner
+        run: |
+          python -m pip install -c constraints/ci.txt pytest
+          python -m pytest -q tests/test_privacy_scan.py
+      - name: Scan every tracked file
+        run: python tools/privacy_scan.py
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Install the package and the checkers, at the versions in constraints/ci.txt
+        run: python -m pip install -c constraints/ci.txt -e . pytest import-linter ruff mypy types-PyYAML
+      - name: Lint
+        run: ruff check src tools tests
+      - name: Type-check the whole package
+        run: mypy
+      - name: Run the tests (the help snapshots included)
+        run: python -m pytest -q
+      - name: Check the layer contract (the measurement never imports the model)
+        run: lint-imports
+      - name: Check the CLI reference is generated from the help
+        run: python tools/gen_cli_reference.py --check
+
+  # What a user installs, not the source tree: the wheel, built and installed (never editable) on every Python the
+  # package supports, with the newest dependencies each allows, and the whole suite run against it. The bit-exact checks
+  # hold only at the pinned versions, and the help snapshots only with the pinned rendering library: `package` checks
+  # both.
+  wheel:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Build the sdist and the wheel
+        run: python -m pip install build && python -m build
+      - name: Install the wheel, not the source tree
+        run: python -m pip install dist/*.whl pytest
+      - name: The suite against the installed package
+        run: >-
+          SERVECAST_EXACT=0 python -m pytest -q
+          --deselect tests/test_cli_help.py::test_help_pages_match_their_snapshots
+          --deselect tests/test_cli_help.py::test_the_cli_reference_is_generated_from_the_help
+
+  # The oldest dependency versions pyproject.toml allows, read from it (each >= bound becomes ==), on the oldest
+  # Python it allows: the lower bounds are a promise, so they are tested.
+  minimums:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+      - name: Build the sdist and the wheel
+        run: python -m pip install build && python -m build
+      - name: Install the wheel at the oldest versions its dependencies allow
+        run: |
+          oldest=$(python -c 'import re, tomllib; print(" ".join(re.sub(r">=([^,]+).*", r"==\1", d) for d in tomllib.load(open("pyproject.toml", "rb"))["project"]["dependencies"]))')
+          echo "$oldest"
+          python -m pip install dist/*.whl $oldest pytest
+      - name: The suite against them
+        run: >-
+          SERVECAST_EXACT=0 python -m pytest -q
+          --deselect tests/test_cli_help.py::test_help_pages_match_their_snapshots
+          --deselect tests/test_cli_help.py::test_the_cli_reference_is_generated_from_the_help
+
+  # The model against the reference data, bit for bit: some load points of each pipeline here (every one of them in
+  # parity-full.yml and on the reference machine). On the load points checked so far the predictions are identical on
+  # macOS and on Linux; the components' intermediate values are exact on macOS arm64, while on Linux a different math
+  # library rounds some of them differently.
+  parity-macos:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Install the package at the versions in constraints/ci.txt
+        run: python -m pip install -c constraints/ci.txt -e . pytest
+      - name: The components against their reference outputs, and the outputs the docs show, bit for bit
+        run: python -m pytest -q -m exact tests/components tests/test_docs_examples.py
+      - name: Recompute some of the paper's and the newest law's predictions, evicting ones included
+        if: always()
+        run: |
+          python tools/parity.py paper --limit 6 --jobs 3
+          python tools/parity.py paper --jobs 3 --match "rtx_3090_ti deepseek-ai/deepseek-llm-7b-base azure-conversation N24 " --match "rtx_3090_ti meta-llama/Meta-Llama-3-8B servegen N60 " --match "rtx_3090_ti meta-llama/Meta-Llama-3-8B azure-conversation N67 "
+          python tools/parity.py newest --limit 3 --jobs 3
+
+  parity-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Install the package at the versions in constraints/ci.txt
+        run: python -m pip install -c constraints/ci.txt -e . pytest
+      - name: The components' intermediate values, bit for bit (information only on Linux)
+        continue-on-error: true
+        run: SERVECAST_EXACT=1 python -m pytest -q -m exact tests/components
+      - name: Recompute some of the paper's and the newest law's predictions, evicting ones included
+        if: always()
+        run: |
+          python tools/parity.py paper --limit 6 --jobs 2
+          python tools/parity.py paper --jobs 2 --match "rtx_3090_ti deepseek-ai/deepseek-llm-7b-base azure-conversation N24 " --match "rtx_3090_ti meta-llama/Meta-Llama-3-8B servegen N60 " --match "rtx_3090_ti meta-llama/Meta-Llama-3-8B azure-conversation N67 "
+          python tools/parity.py newest --limit 3 --jobs 2

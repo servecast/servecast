@@ -1,0 +1,13 @@
+                                                                                                    
+ Usage: servecast workload [OPTIONS] COMMAND [ARGS]...                                              
+                                                                                                    
+ Inspect a trace, or turn a mean-and-variance workload into concrete requests.                      
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮
+│ describe  Summarize the request lengths of a trace.                                              │
+│ sample    Draw the request pool of a manifest's workload and write it.                           │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+

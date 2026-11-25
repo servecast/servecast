@@ -1,0 +1,41 @@
+                                                                                                    
+ Usage: servecast calibrate [OPTIONS]                                                               
+                                                                                                    
+ Fit a cost law to profiling data and save the calibration.                                         
+                                                                                                    
+ Fits the cost law selected by the versions to the profiling data, and saves the calibration in     
+ your data directory under a name that --with accepts. servecast predict runs the same fit on the   
+ fly when its manifest gives profiling data.                                                        
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Inputs ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --config    -c      MANIFEST  A manifest whose calibration.data names the profiling data.        │
+│ --data              PATH      The profiling data, without a manifest: a file, a directory        │
+│                               holding profiling.json, or the name of a shipped calibration whose │
+│                               profiling data ships (servecast list calibrations).                │
+│ --versions          DATE      Optional: the profiling data names its cost law. A year-month      │
+│                               (2026-11) given here must select the same law.                     │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --name              <str>         The calibration's name, to pass to --with (default             │
+│                                   local/GPU/COST_LAW, plus /LLM for a per-LLM calibration).      │
+│ --output-dir        DIR           Where calibration.json and run.json go; the calibration is     │
+│                                   also saved under its name in your data directory.              │
+│                                   [default: servecast-calibration]                               │
+│ --format            <table|json>  How the summary is printed. Files on disk do not change.       │
+│                                   [default: table]                                               │
+│ --overwrite         <bool>        Replace your calibration of the same name.                     │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast calibrate -c m.yaml                                                                     
+  servecast calibrate --data ./a100-profiling-data --versions 2026-11 --name my-a100                
+                                                                                                    
+                                                                                                    
+ See also: servecast profile calibration, servecast list calibrations.                              
+                                                                                                    
+

@@ -1,0 +1,119 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "servecast"
+version = "0.0.1"
+description = "Predicts LLM serving performance (TTFT, TPOT, throughput) on a GPU running vLLM. This release only reserves the name."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+dependencies = ["typer>=0.29,<1", "pydantic>=2.10,<3", "PyYAML>=6", "numpy>=2.2,<3", "scipy>=1.15,<2"]
+authors = [{ name = "The ServeCast authors" }]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+]
+
+[project.optional-dependencies]
+# the documentation site: `zensical serve` previews it
+docs = ["zensical==0.1.2"]
+# measuring on an NVIDIA GPU host (`servecast profile`): the engine every calibration and measurement uses, NVML for
+# the GPU and its clock, and ninja, with which FlashInfer compiles its kernels (the paper's GPU hosts ran these).
+# Linux only: vLLM 0.25.1 ships wheels for Linux alone and the profile commands run nowhere else, so elsewhere (macOS)
+# the extra installs nothing instead of compiling vLLM from source
+profile = ["vllm==0.25.1; sys_platform == 'linux'", "nvidia-ml-py>=13.610.43; sys_platform == 'linux'",
+           "ninja>=1.13.2; sys_platform == 'linux'"]
+
+[project.urls]
+Homepage = "https://github.com/servecast/servecast"
+
+[project.scripts]
+servecast = "servecast.cli.app:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/servecast"]
+
+# The layer contract, checked in CI by `lint-imports`. Each layer may import only the ones named in its
+# docstring; above all, the measurement (`profile`) never imports the model.
+[tool.importlinter]
+root_package = "servecast"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "core imports nothing else from the package"
+type = "forbidden"
+source_modules = ["servecast.core"]
+forbidden_modules = ["servecast.model", "servecast.calibrate", "servecast.profile", "servecast.compare", "servecast.paper", "servecast.cli"]
+
+[[tool.importlinter.contracts]]
+name = "model imports core only"
+type = "forbidden"
+source_modules = ["servecast.model"]
+forbidden_modules = ["servecast.calibrate", "servecast.profile", "servecast.compare", "servecast.paper", "servecast.cli"]
+
+[[tool.importlinter.contracts]]
+name = "calibrate imports core and model only"
+type = "forbidden"
+source_modules = ["servecast.calibrate"]
+forbidden_modules = ["servecast.profile", "servecast.compare", "servecast.paper", "servecast.cli"]
+
+[[tool.importlinter.contracts]]
+name = "the measurement never imports the model: profile imports core only"
+type = "forbidden"
+source_modules = ["servecast.profile"]
+forbidden_modules = ["servecast.model", "servecast.calibrate", "servecast.compare", "servecast.paper", "servecast.cli"]
+
+[[tool.importlinter.contracts]]
+name = "compare imports core only"
+type = "forbidden"
+source_modules = ["servecast.compare"]
+forbidden_modules = ["servecast.model", "servecast.calibrate", "servecast.profile", "servecast.paper", "servecast.cli"]
+
+[[tool.importlinter.contracts]]
+name = "paper never imports the measurement or the command line"
+type = "forbidden"
+source_modules = ["servecast.paper"]
+forbidden_modules = ["servecast.profile", "servecast.cli"]
+
+[[tool.importlinter.contracts]]
+name = "only profile may import torch or vllm, so the CPU install needs neither"
+type = "forbidden"
+source_modules = ["servecast.core", "servecast.model", "servecast.calibrate", "servecast.compare", "servecast.paper"]
+forbidden_modules = ["torch", "vllm"]
+
+[tool.pytest.ini_options]
+markers = ["exact: compares with the reference data bit for bit; runs on the reference environment"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "RUF"]
+# N802/N803/N806: the model's equations name their quantities (N_D, K, L, Omega) as the papers do
+# RUF001-003: the help and docs use typographic characters on purpose
+# N812: modules are imported under one-letter names where a file uses several of them (P, R, W)
+ignore = ["N802", "N803", "N806", "N812", "N815", "RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.per-file-ignores]
+# released component modules mirror the reference implementation line for line and never change (versions.lock):
+# style rules that would rewrite their expressions do not apply
+"src/servecast/**/v20*.py" = ["B", "E5", "E7", "W", "I", "UP", "N", "RUF"]
+
+[tool.mypy]
+python_version = "3.12"
+packages = ["servecast"]
+mypy_path = "src"
+ignore_missing_imports = true
+warn_unused_ignores = true
+plugins = ["pydantic.mypy"]
+
+# released component modules are frozen copies of the reference implementation: numpy arrays reach parameters typed
+# as sequences, which runs correctly and is not edited
+[[tool.mypy.overrides]]
+module = ["servecast.model.workload.v2026_10", "servecast.calibrate.procedure.v2026_10"]
+disable_error_code = ["arg-type", "assignment", "index"]

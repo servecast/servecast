@@ -1,0 +1,43 @@
+                                                                                                    
+ Usage: servecast replicate predict [OPTIONS]                                                       
+                                                                                                    
+ Predict one of the paper's configurations beside its measurement.                                  
+                                                                                                    
+ The calibration, the LLM, the trace and the client count must all be the paper's; the output       
+ prints the paper's measurement next to the prediction, and replication.json in the output          
+ directory keeps both.                                                                              
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Inputs ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ *  --with        CALIBRATION  One of the paper's calibrations: GPU/d9cbf1d3/LLM.                 │
+│                               [required]                                                         │
+│ *  --to          LLM          One of the paper's LLMs, on the same GPU.                          │
+│                               [required]                                                         │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Workload ───────────────────────────────────────────────────────────────────────────────────────╮
+│ *  --trace          <azure-conversation|burstgpt|servege  One of the paper's traces.             │
+│                     n>                                    [required]                             │
+│ *  --clients        N                                     One of the paper's client counts for   │
+│                                                           that LLM and GPU.                      │
+│                                                           [required]                             │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --output-dir        DIR           Where the results go. A non-empty directory is refused without │
+│                                   --overwrite.                                                   │
+│                                   [default: servecast-output]                                    │
+│ --format            <table|json>  How the summary is printed. Files on disk do not change.       │
+│                                   [default: table]                                               │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast replicate predict --with a100_sxm_40gb/d9cbf1d3/llama-3-8b --to qwen2.5-7b \            
+      --trace burstgpt --clients 66                                                                 
+                                                                                                    
+                                                                                                    
+ See also: servecast replicate run, servecast list calibrations.                                    
+                                                                                                    
+

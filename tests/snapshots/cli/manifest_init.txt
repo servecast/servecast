@@ -1,0 +1,25 @@
+                                                                                                    
+ Usage: servecast manifest init [OPTIONS]                                                           
+                                                                                                    
+ Write a commented manifest to start from.                                                          
+                                                                                                    
+ Every field is present with its default and a one-line explanation; the component versions are     
+ pinned to today's.                                                                                 
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --template          <predict|profile>  What the manifest is for.                                 │
+│                                        [default: predict]                                        │
+│ --out               FILE               Write to FILE instead of standard output.                 │
+│ --help      -h      <bool>             Show this message and exit.                               │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast manifest init > m.yaml                                                                  
+  servecast manifest init --template profile --out profile.yaml                                     
+                                                                                                    
+                                                                                                    
+ See also: servecast manifest explain.                                                              
+                                                                                                    
+

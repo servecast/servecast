@@ -1,0 +1,25 @@
+{
+ "schema": "servecast-calibration/2",
+ "name": "rtx_3090_ti/d9cbf1d3/qwen2.5-7b",
+ "law": {
+  "cost_law": "d9cbf1d3",
+  "parameters": {
+   "eta_w": 0.9999998785536411,
+   "eta_kv": 0.9999998785536411,
+   "eta_c": 0.7871815031477644,
+   "kappa": 5.575166953354228,
+   "beta_req": 1.0448273493126992e-50
+  }
+ },
+ "conditions": {
+  "gpu": "rtx_3090_ti",
+  "gpu_spec": {
+   "peak_flop_per_s": 80000000000000.0,
+   "memory_bandwidth_bytes_per_s": 1008000000000.0,
+   "boost_clock_mhz": 1860
+  },
+  "clock_mhz": 1500.0,
+  "tensor_parallel": 1,
+  "fitted_on": "Qwen/Qwen2.5-7B"
+ }
+}

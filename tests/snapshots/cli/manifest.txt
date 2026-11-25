@@ -1,0 +1,16 @@
+                                                                                                    
+ Usage: servecast manifest [OPTIONS] COMMAND [ARGS]...                                              
+                                                                                                    
+ Create, check and explain manifests.                                                               
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮
+│ init      Write a commented manifest to start from.                                              │
+│ show      Print a manifest that ships with ServeCast, to save as a file of yours.                │
+│ validate  Check a manifest and report every problem at once.                                     │
+│ explain   Explain one manifest field: meaning, type, default and allowed values.                 │
+│ schema    Print the JSON Schema of the manifest or of an output file.                            │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+

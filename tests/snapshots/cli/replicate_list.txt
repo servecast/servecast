@@ -1,0 +1,22 @@
+                                                                                                    
+ Usage: servecast replicate list [OPTIONS]                                                          
+                                                                                                    
+ List the paper's experiments and what each one reproduces.                                         
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
+│                               [default: table]                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast replicate list                                                                          
+                                                                                                    
+                                                                                                    
+ See also: servecast replicate run.                                                                 
+                                                                                                    
+

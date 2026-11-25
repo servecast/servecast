@@ -1,0 +1,32 @@
+                                                                                                    
+ Usage: servecast manifest validate [OPTIONS]                                                       
+                                                                                                    
+ Check a manifest and report every problem at once.                                                 
+                                                                                                    
+ Each problem is reported as file: path: message, with the allowed values.                          
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Inputs ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ *  --config  -c      MANIFEST    The manifest: a YAML file, or the name of one that ships with   │
+│                                  ServeCast (servecast list manifests).                           │
+│                                  [required]                                                      │
+│    --set             PATH=VALUE  Override one manifest field; the value is read as YAML.         │
+│                                  Repeatable, applied left to right, then the whole manifest is   │
+│                                  validated.                                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
+│                               [default: table]                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast manifest validate -c m.yaml                                                             
+                                                                                                    
+                                                                                                    
+ See also: servecast manifest explain.                                                              
+                                                                                                    
+

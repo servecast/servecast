@@ -1,0 +1,31 @@
+                                                                                                    
+ Usage: servecast workload describe [OPTIONS] {TRACE}                                               
+                                                                                                    
+ Summarize the request lengths of a trace.                                                          
+                                                                                                    
+ Prints the number of requests, the mean, variance and quantiles of the input and output lengths,   
+ and their correlation.                                                                             
+                                                                                                    
+╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮
+│ *    TRACE      <path>  A Mooncake JSONL file, a lengths file, or a trace the package ships      │
+│                         (azure-conversation, burstgpt, servegen).                                │
+│                         [required]                                                               │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
+│                               [default: table]                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast workload describe azure_conv.jsonl                                                      
+  servecast workload describe burstgpt                                                              
+                                                                                                    
+                                                                                                    
+ See also: servecast workload sample.                                                               
+                                                                                                    
+

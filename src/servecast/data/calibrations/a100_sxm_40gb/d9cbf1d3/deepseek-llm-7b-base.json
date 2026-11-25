@@ -1,0 +1,25 @@
+{
+ "schema": "servecast-calibration/2",
+ "name": "a100_sxm_40gb/d9cbf1d3/deepseek-llm-7b-base",
+ "law": {
+  "cost_law": "d9cbf1d3",
+  "parameters": {
+   "eta_w": 1.000000416448032,
+   "eta_kv": 1.000000416448032,
+   "eta_c": 0.650874760186985,
+   "kappa": 3.8744028994122064,
+   "beta_req": 0.016955691926994098
+  }
+ },
+ "conditions": {
+  "gpu": "a100_sxm_40gb",
+  "gpu_spec": {
+   "peak_flop_per_s": 312000000000000.0,
+   "memory_bandwidth_bytes_per_s": 1555000000000.0,
+   "boost_clock_mhz": 1410
+  },
+  "clock_mhz": 1200.0,
+  "tensor_parallel": 1,
+  "fitted_on": "deepseek-ai/deepseek-llm-7b-base"
+ }
+}

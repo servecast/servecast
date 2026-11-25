@@ -1,0 +1,22 @@
+                                                                                                    
+ Usage: servecast completion show [OPTIONS] {shell}                                                 
+                                                                                                    
+ Print the completion script for a shell.                                                           
+                                                                                                    
+╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮
+│ *    shell      <bash|zsh|fish>  The shell.                                                      │
+│                                  [required]                                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  mkdir -p ~/.zfunc && servecast completion show zsh > ~/.zfunc/_servecast                          
+                                                                                                    
+                                                                                                    
+ See also: servecast completion install.                                                            
+                                                                                                    
+

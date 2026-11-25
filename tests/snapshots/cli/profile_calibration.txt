@@ -1,0 +1,52 @@
+                                                                                                    
+ Usage: servecast profile calibration [OPTIONS]                                                     
+                                                                                                    
+ Probe the cost law on this GPU and write its profiling data.                                       
+                                                                                                    
+ Runs the calibration probe of the cost law the manifest's versions select: batch compositions of   
+ controlled sizes, each timed step by step. For the per-GPU law (c62ebe75), the default, it probes  
+ 8 synthetic models served with random weights, then a grid of matrix multiplications; for the      
+ paper's law (d9cbf1d3, once per LLM and GPU), the manifest's LLM. vLLM runs with the probe's own   
+ engine settings, those every shipped calibration was measured with (a context of 4,096 tokens, 512 
+ sequences, 2,048 batched tokens, 9,965 KV blocks, or the manifest's block count if smaller for the 
+ paper's law); the manifest's other engine settings are for serving, so the same manifest serves    
+ both commands. Writes every step and the audit (probe.json, or one probe-MODEL.json per synthetic  
+ model and gemm.json) and, when every audit is clean, profiling.json, which servecast calibrate     
+ fits.                                                                                              
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Inputs ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ *  --config  -c      MANIFEST    The manifest: a YAML file, or the name of one that ships with   │
+│                                  ServeCast (servecast list manifests).                           │
+│                                  [required]                                                      │
+│    --set             PATH=VALUE  Override one manifest field; the value is read as YAML.         │
+│                                  Repeatable, applied left to right, then the whole manifest is   │
+│                                  validated.                                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --output-dir        DIR           Where the results go. A non-empty directory is refused without │
+│                                   --overwrite.                                                   │
+│                                   [default: servecast-profiling-data]                            │
+│ --overwrite         <bool>        Replace the known output files in a non-empty output           │
+│                                   directory.                                                     │
+│ --format            <table|json>  How the summary is printed. Files on disk do not change.       │
+│                                   [default: table]                                               │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Advanced ───────────────────────────────────────────────────────────────────────────────────────╮
+│ --poweroff-when-safe        <bool>  Power this machine off (sudo shutdown -h now) once the       │
+│                                     results are written and match their checksums; not after a   │
+│                                     failure. Many cloud providers bill a powered-off machine     │
+│                                     until it is terminated.                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast profile calibration -c m.yaml                                                           
+                                                                                                    
+                                                                                                    
+ See also: servecast calibrate, servecast doctor.                                                   
+                                                                                                    
+

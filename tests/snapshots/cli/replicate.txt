@@ -1,0 +1,18 @@
+                                                                                                    
+ Usage: servecast replicate [OPTIONS] COMMAND [ARGS]...                                             
+                                                                                                    
+ Reproduce the paper with its pinned component versions, calibrations, LLMs and traces. Every       
+ output is labelled paper replication. rq1 and rq2 are recomputed; rq3, ablation and appendix print 
+ their published tables; Vidur is not run: its numbers are the ones the paper recorded.             
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮
+│ list     List the paper's experiments and what each one reproduces.                              │
+│ fetch    Download the paper's data record (not in this release).                                 │
+│ predict  Predict one of the paper's configurations beside its measurement.                       │
+│ run      Recompute one of the paper's experiments and print its table.                           │
+│ verify   Check the paper's printed cells against what the shipped data give.                     │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+

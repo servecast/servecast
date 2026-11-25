@@ -1,0 +1,25 @@
+{
+ "schema": "servecast-calibration/2",
+ "name": "h100_sxm/d9cbf1d3/qwen2.5-3b",
+ "law": {
+  "cost_law": "d9cbf1d3",
+  "parameters": {
+   "eta_w": 0.9999999343741514,
+   "eta_kv": 0.9999999343741514,
+   "eta_c": 0.5965139416512032,
+   "kappa": 3.033475895353218,
+   "beta_req": 0.0006961584063084901
+  }
+ },
+ "conditions": {
+  "gpu": "h100_sxm",
+  "gpu_spec": {
+   "peak_flop_per_s": 989500000000000.0,
+   "memory_bandwidth_bytes_per_s": 3350000000000.0,
+   "boost_clock_mhz": 1830
+  },
+  "clock_mhz": 1375.0,
+  "tensor_parallel": 1,
+  "fitted_on": "Qwen/Qwen2.5-3B"
+ }
+}

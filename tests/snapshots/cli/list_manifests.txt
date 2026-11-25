@@ -1,0 +1,25 @@
+                                                                                                    
+ Usage: servecast list manifests [OPTIONS]                                                          
+                                                                                                    
+ Manifests that ship with ServeCast, examples to start from.                                        
+                                                                                                    
+ They are inside the installed package. servecast manifest show NAME prints one, to save as a file  
+ of yours and give to -c by its path.                                                               
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
+│                               [default: table]                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast list manifests                                                                          
+                                                                                                    
+                                                                                                    
+ See also: servecast manifest show.                                                                 
+                                                                                                    
+

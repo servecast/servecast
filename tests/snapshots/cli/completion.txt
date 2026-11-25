@@ -1,0 +1,13 @@
+                                                                                                    
+ Usage: servecast completion [OPTIONS] COMMAND [ARGS]...                                            
+                                                                                                    
+ Shell completion for bash, zsh and fish.                                                           
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮
+│ install  Install completion for your shell, and print what was changed.                          │
+│ show     Print the completion script for a shell.                                                │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+

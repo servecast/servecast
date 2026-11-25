@@ -1,0 +1,26 @@
+                                                                                                    
+ Usage: servecast replicate fetch [OPTIONS]                                                         
+                                                                                                    
+ Download the paper's data record (not in this release).                                            
+                                                                                                    
+ The record is published with the first release. replicate run --from-frozen and the recomputation  
+ of rq1 and rq2 need no download.                                                                   
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --dest          DIR           Where the data go (default your cache directory).                  │
+│ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
+│                               [default: table]                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast replicate fetch                                                                         
+                                                                                                    
+                                                                                                    
+ See also: servecast replicate run.                                                                 
+                                                                                                    
+

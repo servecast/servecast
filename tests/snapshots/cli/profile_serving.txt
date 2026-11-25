@@ -1,0 +1,54 @@
+                                                                                                    
+ Usage: servecast profile serving [OPTIONS]                                                         
+                                                                                                    
+ Serve the workload with vLLM on this GPU and measure it.                                           
+                                                                                                    
+ Starts vLLM 0.25.1 with the manifest's engine settings, drives the closed workload from the same   
+ request pool that servecast predict uses, and stops each load point by the manifest's rule, with   
+ the GPU clock sampled. Writes measurement.json, with the same summary fields as prediction.json,   
+ for servecast compare.                                                                             
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Inputs ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ *  --config  -c      MANIFEST    The manifest: a YAML file, or the name of one that ships with   │
+│                                  ServeCast (servecast list manifests).                           │
+│                                  [required]                                                      │
+│    --set             PATH=VALUE  Override one manifest field; the value is read as YAML.         │
+│                                  Repeatable, applied left to right, then the whole manifest is   │
+│                                  validated.                                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Workload ───────────────────────────────────────────────────────────────────────────────────────╮
+│ --sweep        PATH=V1,V2,...  Repeat for each value of ONE field, e.g.                          │
+│                                traffic.load.concurrency=40,80,120.                               │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --output-dir        DIR           Where the results go. A non-empty directory is refused without │
+│                                   --overwrite.                                                   │
+│                                   [default: servecast-measurement]                               │
+│ --overwrite         <bool>        Replace the known output files in a non-empty output           │
+│                                   directory.                                                     │
+│ --format            <table|json>  How the summary is printed. Files on disk do not change.       │
+│                                   [default: table]                                               │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Advanced ───────────────────────────────────────────────────────────────────────────────────────╮
+│ --timeout                   SECONDS [x>=1]  Stop a load point that has not converged after this  │
+│                                             long: its numbers are written, marked as not         │
+│                                             converged, and the command exits with status 124.    │
+│ --poweroff-when-safe        <bool>          Power this machine off (sudo shutdown -h now) once   │
+│                                             the results are written and match their checksums;   │
+│                                             not after a failure. Many cloud providers bill a     │
+│                                             powered-off machine until it is terminated.          │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast profile serving -c m.yaml                                                               
+  servecast profile serving -c m.yaml --sweep traffic.load.concurrency=40,80,120                    
+                                                                                                    
+                                                                                                    
+ See also: servecast compare, servecast doctor, servecast workload sample.                          
+                                                                                                    
+

@@ -1,0 +1,49 @@
+                                                                                                    
+ Usage: servecast replicate run [OPTIONS] {experiment}                                              
+                                                                                                    
+ Recompute one of the paper's experiments and print its table.                                      
+                                                                                                    
+ rq1 and rq2 predict every configuration with the paper's pinned pipeline and shipped calibrations, 
+ score it against the paper's measurements, and print the table in the paper's layout; with         
+ --from-frozen the table is computed from the shipped predictions instead, in seconds. rq3 and      
+ appendix fit the paper's 18 calibrations again from their shipped profiling data and print the     
+ training MAPE and the coefficients they give, beside the times the paper measured, as printed.     
+ ablation computes its tables from the shipped predictions of the ablated models and fits the       
+ workload laws again from the traces. Vidur is not run: its numbers are the ones the paper          
+ recorded.                                                                                          
+                                                                                                    
+╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮
+│ *    experiment      <rq1|rq2|rq3|ablation|appendix>  Which experiment.                          │
+│                                                       [required]                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Inputs ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --gpu                <str>   Restrict to one of the paper's GPUs.                                │
+│ --from-frozen        <bool>  Print the tables from the shipped predictions, or as published, in  │
+│                              seconds, instead of recomputing.                                    │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --output-dir        DIR           Where EXPERIMENT.json goes; an earlier result of the same      │
+│                                   experiment is replaced.                                        │
+│                                   [default: servecast-replicate]                                 │
+│ --format            <table|json>  How the summary is printed. Files on disk do not change.       │
+│                                   [default: table]                                               │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Advanced ───────────────────────────────────────────────────────────────────────────────────────╮
+│ --jobs        <int range> [x>=1]  Load points predicted, or calibrations and workload laws       │
+│                                   fitted, in parallel processes.                                 │
+│                                   [default: 1]                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast replicate run rq1 --from-frozen                                                         
+  servecast replicate run rq2 --gpu h100_sxm                                                        
+                                                                                                    
+                                                                                                    
+ See also: servecast replicate verify, servecast replicate fetch.                                   
+                                                                                                    
+

@@ -1,0 +1,26 @@
+                                                                                                    
+ Usage: servecast manifest show [OPTIONS] {NAME}                                                    
+                                                                                                    
+ Print a manifest that ships with ServeCast, to save as a file of yours.                            
+                                                                                                    
+ The manifests that ship with ServeCast are examples inside the installed package, which a          
+ reinstall replaces. Save one to a file, edit the file, and give its path to -c.                    
+                                                                                                    
+╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮
+│ *    NAME      <str>  A manifest that ships with ServeCast, as servecast list manifests names    │
+│                       it.                                                                        │
+│                       [required]                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast manifest show example-a100 > example-a100.yaml                                          
+                                                                                                    
+                                                                                                    
+ See also: servecast list manifests.                                                                
+                                                                                                    
+

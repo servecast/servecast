@@ -1,0 +1,24 @@
+                                                                                                    
+ Usage: servecast list models [OPTIONS]                                                             
+                                                                                                    
+ LLMs whose geometry is known without downloading their config.json.                                
+                                                                                                    
+ The shipped LLMs, then those of models.json in your data directory.                                
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
+│                               [default: table]                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast list models                                                                             
+                                                                                                    
+                                                                                                    
+ See also: servecast predict --to.                                                                  
+                                                                                                    
+

@@ -1,0 +1,24 @@
+                                                                                                    
+ Usage: servecast list gpus [OPTIONS]                                                               
+                                                                                                    
+ GPUs in the registry, and what each one's calibrations cover.                                      
+                                                                                                    
+ The shipped GPUs, then those of gpus.json in your data directory.                                  
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
+│                               [default: table]                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast list gpus                                                                               
+                                                                                                    
+                                                                                                    
+ See also: servecast list calibrations.                                                             
+                                                                                                    
+

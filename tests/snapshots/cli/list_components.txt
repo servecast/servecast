@@ -1,0 +1,24 @@
+                                                                                                    
+ Usage: servecast list components [OPTIONS]                                                         
+                                                                                                    
+ Every component ServeCast can select, by name, with what it computes.                              
+                                                                                                    
+ A cost law's entry includes its calibration procedure.                                             
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
+│                               [default: table]                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast list components                                                                         
+                                                                                                    
+                                                                                                    
+ See also: servecast manifest explain versions.                                                     
+                                                                                                    
+

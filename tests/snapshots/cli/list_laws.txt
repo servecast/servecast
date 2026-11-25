@@ -1,0 +1,22 @@
+                                                                                                    
+ Usage: servecast list laws [OPTIONS]                                                               
+                                                                                                    
+ Cost laws by name: what one calibration covers, and what each computes.                            
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
+│                               [default: table]                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast list laws                                                                               
+                                                                                                    
+                                                                                                    
+ See also: servecast list components.                                                               
+                                                                                                    
+

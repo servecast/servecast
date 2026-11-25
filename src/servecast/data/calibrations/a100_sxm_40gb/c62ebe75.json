@@ -1,0 +1,149 @@
+{
+ "schema": "servecast-calibration/2",
+ "name": "a100_sxm_40gb/c62ebe75",
+ "law": {
+  "cost_law": "c62ebe75",
+  "parameters": {
+   "eta_w": 0.9056215000000002,
+   "eta_kv": 0.8978035071487906,
+   "eta_c": 0.7033894999999999,
+   "kappa": 0.10421659920068194,
+   "beta_req": 4.999999998779105e-09,
+   "tau_tok": 105.88453934020251
+  },
+  "eta_c_grid": {
+   "rule": "interpolation",
+   "points": [
+    {
+     "d_model": 1024,
+     "ffn_ratio": 2.75,
+     "eta_c": 0.5737503640840346
+    },
+    {
+     "d_model": 1024,
+     "ffn_ratio": 3.5,
+     "eta_c": 0.6122132693481289
+    },
+    {
+     "d_model": 1024,
+     "ffn_ratio": 5.5,
+     "eta_c": 0.6831795304949914
+    },
+    {
+     "d_model": 2048,
+     "ffn_ratio": 5.375,
+     "eta_c": 0.7680480475619923
+    },
+    {
+     "d_model": 2048,
+     "ffn_ratio": 2.75,
+     "eta_c": 0.6464640302854253
+    },
+    {
+     "d_model": 2048,
+     "ffn_ratio": 3.5,
+     "eta_c": 0.6992545817772099
+    },
+    {
+     "d_model": 3072,
+     "ffn_ratio": 3.5,
+     "eta_c": 0.8142436381868037
+    },
+    {
+     "d_model": 3072,
+     "ffn_ratio": 5.4167,
+     "eta_c": 0.8576254063919574
+    },
+    {
+     "d_model": 3072,
+     "ffn_ratio": 2.75,
+     "eta_c": 0.846738430980469
+    },
+    {
+     "d_model": 4096,
+     "ffn_ratio": 2.75,
+     "eta_c": 0.8404050373754303
+    },
+    {
+     "d_model": 4096,
+     "ffn_ratio": 3.5,
+     "eta_c": 0.8449825707680912
+    },
+    {
+     "d_model": 4096,
+     "ffn_ratio": 5.375,
+     "eta_c": 0.8850210256076304
+    },
+    {
+     "d_model": 5120,
+     "ffn_ratio": 2.75,
+     "eta_c": 0.8766256946795742
+    },
+    {
+     "d_model": 5120,
+     "ffn_ratio": 3.5,
+     "eta_c": 0.8981743671529423
+    },
+    {
+     "d_model": 5120,
+     "ffn_ratio": 5.4,
+     "eta_c": 0.9327521255979603
+    },
+    {
+     "d_model": 6144,
+     "ffn_ratio": 2.75,
+     "eta_c": 0.8852391060432817
+    },
+    {
+     "d_model": 6144,
+     "ffn_ratio": 3.5,
+     "eta_c": 0.8805548602980234
+    },
+    {
+     "d_model": 6144,
+     "ffn_ratio": 5.4167,
+     "eta_c": 0.9050802687796423
+    },
+    {
+     "d_model": 8192,
+     "ffn_ratio": 2.75,
+     "eta_c": 0.8942253605220856
+    },
+    {
+     "d_model": 8192,
+     "ffn_ratio": 3.5,
+     "eta_c": 0.9107652083533524
+    },
+    {
+     "d_model": 8192,
+     "ffn_ratio": 5.4062,
+     "eta_c": 0.9229464615758557
+    }
+   ],
+   "curve": {
+    "a": 1.1354750841774226,
+    "b": 7331580.534222311
+   }
+  }
+ },
+ "conditions": {
+  "gpu": "a100_sxm_40gb",
+  "gpu_spec": {
+   "peak_flop_per_s": 312000000000000.0,
+   "memory_bandwidth_bytes_per_s": 1555000000000.0,
+   "boost_clock_mhz": 1410
+  },
+  "clock_mhz": 1200.0,
+  "tensor_parallel": 1,
+  "fitted_on": [
+   "synthetic/llama-l12-d2048-f5504-h16-kv2",
+   "synthetic/llama-l12-d3072-f8256-h24-kv24",
+   "synthetic/llama-l24-d1024-f2752-h8-kv1",
+   "synthetic/llama-l24-d2048-f5504-h16-kv16",
+   "synthetic/llama-l24-d3072-f8256-h24-kv6",
+   "synthetic/llama-l36-d1024-f2752-h8-kv8",
+   "synthetic/llama-l36-d2048-f5504-h16-kv4",
+   "synthetic/llama-l36-d3072-f8256-h24-kv3"
+  ]
+ }
+}

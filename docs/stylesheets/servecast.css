@@ -1,0 +1,138 @@
+/* ServeCast's documentation: the web UI's colours (blue #30A2FF for marks, #0B66C2 for text links, yellow #FDB515
+   for the one accent), Source Sans 3 and IBM Plex Mono, a white header like a product page. */
+:root {
+  --sc-blue: #30A2FF;
+  --sc-blue-ink: #0B66C2;
+  --sc-yellow: #FDB515;
+  --md-accent-fg-color: #0B66C2;
+  --md-typeset-a-color: #0B66C2;
+}
+[data-md-color-scheme="slate"] {
+  --md-accent-fg-color: #5AB4FF;
+  --md-typeset-a-color: #5AB4FF;
+  --md-default-bg-color: #0f1216;
+}
+.md-header { border-bottom: 1px solid var(--md-default-fg-color--lightest); box-shadow: none; }
+.md-tabs { border-bottom: 1px solid var(--md-default-fg-color--lightest); }
+.md-header__button.md-logo img { height: 1.6rem; width: auto; }
+
+/* the home page's opening */
+.sc-hero { padding: 1.4rem 0 1.8rem; margin-bottom: 1.2rem; border-bottom: 1px solid var(--md-default-fg-color--lightest); }
+.sc-hero h1 { font-size: 2.3rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.01em; margin: 0.8rem 0 0.9rem;
+              color: var(--md-default-fg-color); max-width: 20em; text-wrap: balance; }
+.sc-lead { font-size: 1.05rem; line-height: 1.6; color: var(--md-default-fg-color--light); max-width: 40em; }
+.sc-pill { display: inline-flex; align-items: center; gap: 0.45rem; border: 1px solid var(--md-default-fg-color--lightest);
+           border-radius: 999px; padding: 0.15rem 0.75rem; font-size: 0.72rem; color: var(--md-default-fg-color--light); }
+.sc-dot { width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--sc-yellow); }
+.sc-hero .md-button { margin: 0.4rem 0.4rem 0 0; }
+.md-typeset .md-button--primary { background: var(--sc-blue-ink); border-color: var(--sc-blue-ink); color: #fff; }
+
+/* the home page's "What you can do with it": Predict as the large card, with the numbers of the page's own examples,
+   and the other three beside it. Each card is a link to its guide (the title's link covers the card). */
+.sc-bento { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); margin: 1.2rem 0 2.4rem; }
+@media screen and (min-width: 60em) {
+  .sc-bento { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+  .sc-bento > .sc-feature { grid-row: 1 / span 3; }
+}
+.sc-card { position: relative; display: flex; flex-direction: column; gap: 0.7rem; padding: 1.3rem 1.35rem 1.25rem;
+           border: 1px solid var(--md-default-fg-color--lightest); border-radius: 0.9rem;
+           background: var(--md-default-bg-color); transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+.sc-card:hover { transform: translateY(-2px); border-color: var(--sc-blue); box-shadow: 0 10px 28px -14px rgba(11, 102, 194, .45); }
+.md-typeset .sc-card p { margin: 0; }
+.sc-compact { flex-direction: row; align-items: flex-start; gap: 1rem; }
+.sc-body { display: flex; flex-direction: column; gap: 0.45rem; flex: 1; min-width: 0; }
+.md-typeset .sc-ic { display: inline-flex; align-items: center; justify-content: center; width: 2.6rem; height: 2.6rem;
+                     border-radius: 0.7rem; background: rgba(48, 162, 255, .13); color: var(--sc-blue-ink); }
+.md-typeset .sc-ic svg { width: 1.35rem; height: 1.35rem; max-height: none; fill: none; }
+.md-typeset a.sc-title { color: var(--md-default-fg-color); font-size: 1.05rem; font-weight: 700;
+                         text-decoration: none; }
+.md-typeset a.sc-title::before { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.md-typeset a.sc-title::after { content: ""; display: inline-block; width: 0.95em; height: 0.95em; margin-left: 0.35em;
+  vertical-align: -0.12em; background: var(--sc-blue); opacity: 0; transform: translateX(-4px); transition: all .15s ease;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E") center / contain no-repeat; }
+.sc-card:hover a.sc-title::after { opacity: 1; transform: none; }
+.md-typeset .sc-card p:has(> a.sc-title) + p { color: var(--md-default-fg-color--light); font-size: 0.8rem;
+                                               line-height: 1.55; }
+.md-typeset code.sc-cmd { position: relative; z-index: 1; display: block; padding: 0.5rem 0.75rem; border-radius: 0.5rem;
+  background: #0f1720; color: #e6edf3; font-size: 0.66rem; white-space: normal; user-select: all; }
+.md-typeset code.sc-cmd::before { content: "$ "; color: var(--sc-blue); }
+.md-typeset .sc-feature { background: linear-gradient(155deg, rgba(48, 162, 255, .11), transparent 60%),
+                          var(--md-default-bg-color); }
+.md-typeset .sc-feature a.sc-title { font-size: 1.35rem; }
+.sc-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; margin-top: 0.3rem; }
+.sc-stat { display: flex; flex-direction: column; padding: 0.7rem 0.8rem; border: 1px solid var(--md-default-fg-color--lightest);
+           border-radius: 0.7rem; background: var(--md-default-bg-color); }
+.sc-k { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--sc-blue-ink); }
+.sc-v { font-size: 1.45rem; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
+.sc-s { font-size: 0.66rem; color: var(--md-default-fg-color--light); }
+.sc-curve svg { display: block; width: 100%; height: auto; }
+.sc-curve .ax { stroke: var(--md-default-fg-color--lightest); stroke-width: 1; }
+.sc-curve .ar { fill: var(--sc-blue); fill-opacity: 0.12; }
+.sc-curve .ln { fill: none; stroke: var(--sc-blue); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.sc-curve circle { fill: var(--md-default-bg-color); stroke: var(--sc-blue); stroke-width: 2.2; }
+.sc-curve text { font-size: 11px; fill: var(--md-default-fg-color--light); font-family: var(--md-text-font-family); }
+.sc-curve text.v { fill: var(--md-default-fg-color); font-weight: 600; }
+.md-typeset .sc-caption { font-size: 0.68rem; color: var(--md-default-fg-color--light); }
+[data-md-color-scheme="slate"] .md-typeset .sc-ic { background: rgba(48, 162, 255, .17); color: #7cc4ff; }
+[data-md-color-scheme="slate"] .sc-k { color: #7cc4ff; }
+[data-md-color-scheme="slate"] .md-typeset code.sc-cmd { background: #1a212b; border: 1px solid rgba(255, 255, 255, .08); }
+/* on a phone: one tile per row, label, value and percentile side by side; larger labels on the curve */
+@media screen and (max-width: 30em) {
+  .sc-stats { grid-template-columns: minmax(0, 1fr); gap: 0.4rem; }
+  .sc-stat { flex-direction: row; align-items: baseline; gap: 0.6rem; padding: 0.5rem 0.7rem; }
+  .sc-k { flex: none; width: 6.2rem; }
+  .sc-v { font-size: 1.1rem; white-space: nowrap; }
+  .sc-s { margin-left: auto; white-space: nowrap; }
+  .sc-curve text { font-size: 14px; }
+}
+
+/* terminal output */
+.md-typeset .language-text pre > code { font-size: 0.7rem; }
+
+/* Text at the size modern documentation uses: the theme's 0.75rem gave 15 px body text on a laptop (20 px root),
+   small for Source Sans 3. Body 18 px with looser lines, tables 16 px (were 12.8), code blocks 14 px (were 12.8;
+   in rem, since the theme scales code inside pre again), inline code 0.85 of the body as before. */
+.md-typeset { font-size: 0.9rem; line-height: 1.65; }
+.md-typeset table:not([class]) { font-size: 0.8rem; }
+.md-typeset pre > code { font-size: 0.7rem; }
+
+/* the home page's How it works diagram, an inline SVG so that it takes the theme's colours and fonts: white cards with
+   a darker edge and a light shadow on a tinted ground, the inputs grouped by a dashed outline */
+:root { --sc-canvas: #eef2f7; --sc-card: #ffffff; --sc-line: rgba(15, 23, 32, .16); }
+[data-md-color-scheme="slate"] { --sc-canvas: #161c24; --sc-card: #1f2834; --sc-line: rgba(255, 255, 255, .14); }
+.sc-flow { overflow-x: auto; margin: 1rem 0 2rem; }
+.sc-flow > svg { display: block; width: 100%; min-width: 46rem; height: auto; }
+.sc-flow .bg { fill: var(--sc-canvas); }
+.sc-flow .grp { fill: none; stroke: var(--sc-line); stroke-width: 1.3; stroke-dasharray: 5 5; }
+.sc-flow .pl { font: 700 11px var(--md-text-font-family); letter-spacing: .1em; fill: var(--md-default-fg-color--light); }
+.sc-flow .cd { fill: var(--sc-card); stroke: var(--sc-line); stroke-width: 1.2; filter: url(#sc-sh); }
+.sc-flow .it { fill: rgba(48, 162, 255, .15); }
+.sc-flow .ico { fill: none; stroke: var(--sc-blue-ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.sc-flow .icy { stroke: #B7791F; }
+.sc-flow .icg { stroke: var(--md-default-fg-color--light); }
+.sc-flow .icf { fill: none; stroke: #8fb8e0; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.sc-flow .t { font: 700 15px var(--md-text-font-family); fill: var(--md-default-fg-color); }
+.sc-flow .s { font: 12.5px var(--md-text-font-family); fill: var(--md-default-fg-color--light); }
+.sc-flow .m { font: 12px var(--md-code-font-family); fill: var(--md-default-fg-color--light); }
+.sc-flow .mt { font: 600 13.5px var(--md-code-font-family); fill: var(--md-default-fg-color); }
+.sc-flow .ct { font: 700 10.5px var(--md-text-font-family); letter-spacing: .07em; }
+.sc-flow .cb { fill: rgba(48, 162, 255, .17); }
+.sc-flow .cbt { fill: var(--sc-blue-ink); }
+.sc-flow .cy { fill: rgba(253, 181, 21, .26); }
+.sc-flow .cyt { fill: #8a5a00; }
+.sc-flow .cg { fill: rgba(127, 127, 127, .15); }
+.sc-flow .cgt { fill: var(--md-default-fg-color); }
+.sc-flow .fl { fill: #0f1720; }
+.sc-flow .fm { font: 12px var(--md-code-font-family); fill: #e6edf3; }
+.sc-flow .eg { fill: none; stroke: var(--md-default-fg-color--light); stroke-width: 1.6; }
+.sc-flow .ah { fill: var(--md-default-fg-color--light); }
+.sc-flow .dl { stroke: var(--md-default-fg-color--lighter); stroke-width: 1.4; stroke-dasharray: 3 4; }
+.sc-flow .pill { fill: var(--sc-card); stroke: var(--sc-line); }
+.sc-flow .pt { font: 11.5px var(--md-text-font-family); fill: var(--md-default-fg-color--light); }
+[data-md-color-scheme="slate"] .sc-flow .ico { stroke: #7cc4ff; }
+[data-md-color-scheme="slate"] .sc-flow .cbt { fill: #7cc4ff; }
+[data-md-color-scheme="slate"] .sc-flow .icy { stroke: #FDB515; }
+[data-md-color-scheme="slate"] .sc-flow .cyt { fill: #FDB515; }
+[data-md-color-scheme="slate"] .sc-flow .icg { stroke: var(--md-default-fg-color--light); }
+[data-md-color-scheme="slate"] .sc-flow .fl { fill: #0b0f14; stroke: rgba(255, 255, 255, .10); }

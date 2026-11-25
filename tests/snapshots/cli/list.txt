@@ -1,0 +1,17 @@
+                                                                                                    
+ Usage: servecast list [OPTIONS] COMMAND [ARGS]...                                                  
+                                                                                                    
+ Show what is known and installed.                                                                  
+                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮
+│ gpus          GPUs in the registry, and what each one's calibrations cover.                      │
+│ laws          Cost laws by name: what one calibration covers, and what each computes.            │
+│ components    Every component ServeCast can select, by name, with what it computes.              │
+│ calibrations  Installed calibrations, shipped and your own, with what each covers.               │
+│ manifests     Manifests that ship with ServeCast, examples to start from.                        │
+│ models        LLMs whose geometry is known without downloading their config.json.                │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+

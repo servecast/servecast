@@ -1,0 +1,21 @@
+                                                                                                    
+ Usage: servecast completion install [OPTIONS] [shell]                                              
+                                                                                                    
+ Install completion for your shell, and print what was changed.                                     
+                                                                                                    
+╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮
+│   shell      <bash|zsh|fish>  The shell (default the one running).                               │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help  -h      <bool>  Show this message and exit.                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                    
+ Examples                                                                                           
+                                                                                                    
+                                                                                                    
+  servecast completion install                                                                      
+                                                                                                    
+                                                                                                    
+ See also: servecast completion show.                                                               
+                                                                                                    
+

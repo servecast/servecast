@@ -1,0 +1,25 @@
+{
+ "schema": "servecast-calibration/2",
+ "name": "rtx_3090_ti/d9cbf1d3/llama-3-8b",
+ "law": {
+  "cost_law": "d9cbf1d3",
+  "parameters": {
+   "eta_w": 1.0000004997583207,
+   "eta_kv": 1.0000004997583207,
+   "eta_c": 0.735090684246966,
+   "kappa": 6.297271928451033,
+   "beta_req": 0.028443083014959677
+  }
+ },
+ "conditions": {
+  "gpu": "rtx_3090_ti",
+  "gpu_spec": {
+   "peak_flop_per_s": 80000000000000.0,
+   "memory_bandwidth_bytes_per_s": 1008000000000.0,
+   "boost_clock_mhz": 1860
+  },
+  "clock_mhz": 1500.0,
+  "tensor_parallel": 1,
+  "fitted_on": "meta-llama/Meta-Llama-3-8B"
+ }
+}

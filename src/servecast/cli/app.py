@@ -326,8 +326,9 @@ def compare(
 
 replicate_app = _group(
     "Reproduce the paper with its pinned component versions, calibrations, LLMs and traces. Every output is "
-    "labelled *paper replication*. rq1 and rq2 are recomputed; rq3, ablation and appendix print their published "
-    "tables; Vidur is not run: its numbers are the ones the paper recorded."
+    "labelled *paper replication*. rq1 and rq2 are recomputed; rq3 and appendix fit the paper's calibrations again "
+    "from their shipped profiling data; ablation computes its tables from the shipped predictions of the ablated "
+    "models; Vidur is not run: its numbers are the ones the paper recorded."
 )
 app.add_typer(replicate_app, name="replicate", rich_help_panel="Reproduce the paper",
               short_help="Reproduce the paper with its pinned versions and data.")

@@ -743,8 +743,10 @@ Generated from `servecast --help` by `python tools/gen_cli_reference.py`; do not
  Usage: servecast replicate [OPTIONS] COMMAND [ARGS]...
 
  Reproduce the paper with its pinned component versions, calibrations, LLMs and traces. Every
- output is labelled paper replication. rq1 and rq2 are recomputed; rq3, ablation and appendix print
- their published tables; Vidur is not run: its numbers are the ones the paper recorded.
+ output is labelled paper replication. rq1 and rq2 are recomputed; rq3 and appendix fit the paper's
+ calibrations again from their shipped profiling data; ablation computes its tables from the
+ shipped predictions of the ablated models; Vidur is not run: its numbers are the ones the paper
+ recorded.
 
 ╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
 │ --help  -h      <bool>  Show this message and exit.                                              │

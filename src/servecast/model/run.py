@@ -160,6 +160,8 @@ def _fit_in_child(conn: Any, fitter_id: str, p: list[int], g: list[int], block_s
     try:
         law, report = workloads.get(fitter_id).fit_law(p, g, block_size=block_size, phase_cap=phase_cap)
         conn.send(("ok", law.to_dict(), {k: report[k] for k in FIT_KEYS}))
+    except ValueError as error:  # the fitter refuses this pool: the parent raises it as the same kind of error
+        conn.send(("refused", str(error), None))
     except Exception as error:  # the parent re-raises it: a child must not die silently
         conn.send(("error", f"{type(error).__name__}: {error}", None))
     finally:
@@ -191,6 +193,8 @@ def _fit(fitter_id: str, p: Sequence[int], g: Sequence[int], block_size: int, ph
             proc.terminate()
         proc.join()
         parent.close()
+    if status == "refused":
+        raise ValueError(law)
     if status != "ok":
         raise RuntimeError(f"the workload-law fit failed: {law}")
     return law, kept
@@ -243,7 +247,12 @@ def workload_law(p: Sequence[int], g: Sequence[int], fitter_id: str, phase_cap: 
             progress(f"the cached workload law {path.name} does not match its checksum; fitting it again")
     if progress is not None:
         progress(f"fitting the workload law to {len(p)} requests (cached afterwards)")
-    law, kept = _fit(fitter_id, p, g, block_size, phase_cap, seconds)
+    try:
+        law, kept = _fit(fitter_id, p, g, block_size, phase_cap, seconds)
+    except ValueError as error:  # some small pools fit no prompt-class count: an input to change, not a crash
+        raise ManifestError(f"traffic: the workload law cannot be fitted to these {len(p)} requests ({error}); give "
+                            "more requests, with a larger traffic.pool_size (default 10,000) for synthetic lengths, "
+                            "or a longer trace") from error
     doc = {"schema": P.WORKLOAD_SCHEMA, "trace": None, "workload_fitter": fitter_id, "law": law, "fit": kept,
            "pool_sha256": digest}
     doc["sha256"] = _checksum(doc)
@@ -436,7 +445,11 @@ def resolved_manifest(m: Manifest, pl: Plan) -> dict[str, Any]:
                                         hardware=pl.calibration["conditions"]["gpu"], deployment=pl.deployment,
                                         components=pl.components,
                                         gpu_clock_mhz=float(pl.calibration["conditions"]["clock_mhz"]))
-    doc["calibration"] = {"use": pl.calibration_name, "transfer": m.calibration.transfer}
+    # profiling data stay profiling data: the calibration fitted from them has a label for people, not a name a run
+    # can resolve, and the fit is cached, so running the manifest again reads it back
+    doc["calibration"] = ({"data": str(m.calibration.data)} if m.calibration.data is not None
+                          else {"use": pl.calibration_name})
+    doc["calibration"]["transfer"] = m.calibration.transfer
     as_of = _as_of(m)
     doc["versions"] = {**({"as_of": as_of} if as_of else {}), **pl.components}  # every component, by name
     return doc

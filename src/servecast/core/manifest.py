@@ -232,7 +232,8 @@ class Stop(Strict):
 
 
 #: the fewest requests a pool holds: `pool_size` draws of synthetic lengths, or the requests of a trace that fit the
-#: context length (with fewer, the workload law cannot be fitted)
+#: context length (with fewer, the workload law cannot be fitted). Above it a small pool can still fail the fit, which
+#: depends on the draw (`model.run.workload_law` refuses it then, as an input error)
 MIN_POOL = 100
 
 

@@ -189,10 +189,10 @@ def main(config: Path, *, with_: str | None, to: str | None, sets: list[str], sw
         fail(130, "interrupted")
     doc = R.prediction_document(pl, rows, R.resolved_manifest(manifest, pl))
     try:
-        for name in STALE:
-            if (output_dir / name).is_file():
-                (output_dir / name).unlink()
-                typer.echo(f"servecast predict: removed {output_dir / name}, which described the earlier "
+        for stale in STALE:  # not `name`, which is the calibration's and goes into run.json below
+            if (output_dir / stale).is_file():
+                (output_dir / stale).unlink()
+                typer.echo(f"servecast predict: removed {output_dir / stale}, which described the earlier "
                            "prediction", err=True)
         written = R.write_outputs(output_dir, doc, pl, rows)
         # the manifest as it ran, every default filled in: `servecast predict -c manifest.yaml` runs it again

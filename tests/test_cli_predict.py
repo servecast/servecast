@@ -218,10 +218,20 @@ def test_overwrite_removes_what_described_the_previous_prediction(tmp_path: Path
     assert "removed" in output and "comparison.json" in output
 
 
-def test_the_resolved_manifest_runs_again_as_a_manifest(tmp_path: Path) -> None:
-    code, output, out = predict(tmp_path, BASE)
+@pytest.mark.parametrize("calibration", [
+    {"use": "a100_sxm_40gb/d9cbf1d3/llama-3-8b"},
+    # the review's MF-02: a calibration fitted from profiling data was written back as `use: <name> (fitted from
+    # profiling data)`, a label no calibration has, so the resolved manifest was refused when run again
+    {"data": "a100_sxm_40gb/d9cbf1d3/llama-3-8b"},
+])
+def test_the_resolved_manifest_runs_again_as_a_manifest(tmp_path: Path, calibration: dict) -> None:
+    code, output, out = predict(tmp_path, {**BASE, "calibration": calibration})
     assert code == 0, output
     first = json.loads((out / "prediction.json").read_text())
+    # the review's MF-01: a loop over the files an earlier prediction left reused the calibration's variable, so every
+    # run.json named the calibration "comparison.json"
+    run = json.loads((out / "run.json").read_text(encoding="utf-8"))
+    assert run["inputs"]["calibration"]["name"] == first["provenance"]["calibration"]
     (tmp_path / "again").mkdir()
     code, output, out = predict(tmp_path / "again", first["resolved_manifest"])
     assert code == 0, output
@@ -305,6 +315,18 @@ def test_workload_sample_reports_an_unknown_version_as_an_input_error(tmp_path: 
     r = RUN.invoke(app, ["workload", "sample", "-c", str(cfg), "--set", "versions.cost_law=2099-01",
                          "--out", str(tmp_path / "pool.jsonl")])
     assert r.exit_code == 2 and "versions" in r.output and "internal error" not in r.output, r.output
+
+
+@pytest.mark.parametrize("args", [(), ("--timeout", "120")])
+def test_a_pool_the_workload_fitter_refuses_is_an_input_error(tmp_path: Path, args: tuple) -> None:
+    """The review's MF-03: 100 synthetic requests, the documented minimum, ended in an internal error. The fitter
+    finds no prompt-class count within its tolerance for some small pools (it depends on the draw: 100 and 150 fail
+    here, 200 fits); with --timeout the fit runs in a child process, whose refusal came back as a RuntimeError."""
+    doc = _with("traffic.source", {"type": "synthetic", "input_tokens": {"mean": 500}, "output_tokens": {"mean": 100}})
+    doc = {**doc, "versions": "2026-11", "calibration": {"use": "a100_sxm_40gb/c62ebe75", "transfer": True}}
+    doc["traffic"] = {**doc["traffic"], "pool_size": 100}
+    code, output, _ = predict(tmp_path, doc, *args)
+    assert code == 2 and "traffic.pool_size" in output and "internal error" not in output, output
 
 
 def test_timeout_also_bounds_the_workload_law_fit(tmp_path: Path) -> None:

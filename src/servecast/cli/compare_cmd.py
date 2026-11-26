@@ -45,6 +45,15 @@ def print_table(doc: dict[str, Any]) -> None:
         typer.echo(f"flag: {flag}")
 
 
+def _is_comparison(path: Path) -> bool:
+    """An earlier comparison, which compare may replace: anything else at that path is someone's data."""
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    return isinstance(doc, dict) and str(doc.get("schema", "")).startswith("servecast-comparison/")
+
+
 def main(prediction_dir: Path, measurement_dir: Path, output: Path | None, output_format: str) -> None:
     from servecast.compare import score as S
 
@@ -54,6 +63,9 @@ def main(prediction_dir: Path, measurement_dir: Path, output: Path | None, outpu
         fail(2, str(error))
     path = output if output is not None else prediction_dir / "comparison.json"
     replaced = path.exists()
+    # a file the user names that is not an earlier comparison: --output prediction.json destroyed the prediction
+    if output is not None and path.is_file() and not _is_comparison(path):
+        fail(3, f"--output: {path} exists and is not a comparison; give a new path, or remove it first")
     try:
         path.write_text(json.dumps(doc, indent=1) + "\n", encoding="utf-8")
     except OSError as error:

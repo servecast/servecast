@@ -56,11 +56,17 @@ def describe(path: Path, output_format: str) -> None:
         typer.echo(f"correlation of input and output lengths: {doc['correlation']:.3f}")
 
 
-def sample(config: Path, sets: list[str], out: Path, output_format: str) -> None:
+def sample(config: Path, sets: list[str], out: Path, output_format: str, *, overwrite: bool = False) -> None:
     from servecast.cli.predict_cmd import load_manifest
     from servecast.core import versions
     from servecast.model import run as R
 
+    if str(out) == "-":  # it wrote a file named "-"; the summary goes to standard output
+        typer.echo("servecast workload sample: --out: the pool goes to a file; give its path", err=True)
+        raise typer.Exit(2)
+    if out.exists() and not overwrite:  # it replaced any file there without a word
+        typer.echo(f"servecast workload sample: --out: {out} exists; give --overwrite to replace it", err=True)
+        raise typer.Exit(3)
     m = load_manifest(config, sets, [])
     if m.traffic is None:
         typer.echo("servecast workload sample: traffic: required", err=True)

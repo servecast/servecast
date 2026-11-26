@@ -73,7 +73,8 @@ Generated from `servecast --help` by `python tools/gen_cli_reference.py`; do not
 │                                   [default: servecast-calibration]                               │
 │ --format            <table|json>  How the summary is printed. Files on disk do not change.       │
 │                                   [default: table]                                               │
-│ --overwrite         <bool>        Replace your calibration of the same name.                     │
+│ --overwrite         <bool>        Replace your calibration of the same name, and an --output-dir │
+│                                   that holds other files.                                        │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 
  Examples
@@ -435,14 +436,18 @@ Generated from `servecast --help` by `python tools/gen_cli_reference.py`; do not
 
  Write a commented manifest to start from.
 
- Every field is present with its default and a one-line explanation; the component versions are
- pinned to today's.
+ It holds the fields a prediction needs, each with an example value and a one-line note, and
+ versions set to the month of the newest components. servecast manifest explain describes any
+ field, those left out too.
 
 ╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
-│ --template          <predict|profile>  What the manifest is for.                                 │
-│                                        [default: predict]                                        │
-│ --out               FILE               Write to FILE instead of standard output.                 │
-│ --help      -h      <bool>             Show this message and exit.                               │
+│ --template           <predict|profile>  What the manifest is for.                                │
+│                                         [default: predict]                                       │
+│ --out                FILE               Write to FILE instead of standard output (- is standard  │
+│                                         output). An existing FILE is refused without             │
+│                                         --overwrite.                                             │
+│ --overwrite          <bool>             Replace an existing FILE.                                │
+│ --help       -h      <bool>             Show this message and exit.                              │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 
  Examples
@@ -843,8 +848,7 @@ Generated from `servecast --help` by `python tools/gen_cli_reference.py`; do not
 │                                                           [required]                             │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
-│ --output-dir        DIR           Where the results go. A non-empty directory is refused without │
-│                                   --overwrite.                                                   │
+│ --output-dir        DIR           Where replication.json goes; an earlier one there is replaced. │
 │                                   [default: servecast-output]                                    │
 │ --format            <table|json>  How the summary is printed. Files on disk do not change.       │
 │                                   [default: table]                                               │
@@ -1018,10 +1022,12 @@ Generated from `servecast --help` by `python tools/gen_cli_reference.py`; do not
 │                                  validated.                                                      │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
-│ --out           FILE          Where the pool goes.                                               │
-│                               [default: pool.jsonl]                                              │
-│ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
-│                               [default: table]                                                   │
+│ --out              FILE          Where the pool goes. An existing FILE is refused without        │
+│                                  --overwrite.                                                    │
+│                                  [default: pool.jsonl]                                           │
+│ --overwrite        <bool>        Replace an existing FILE.                                       │
+│ --format           <table|json>  How the summary is printed. Files on disk do not change.        │
+│                                  [default: table]                                                │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 
  Examples

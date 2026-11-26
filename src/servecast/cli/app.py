@@ -220,7 +220,8 @@ def calibrate(
         "directory.")] = Path("servecast-calibration"),
     output_format: OutputFormat = Format.table,
     overwrite: Annotated[bool, typer.Option("--overwrite", rich_help_panel="Output",
-                                            help="Replace your calibration of the same name.")] = False,
+                                            help="Replace your calibration of the same name, and an --output-dir "
+                                                 "that holds other files.")] = False,
 ) -> None:
     """Fit a cost law to profiling data and save the calibration.
 
@@ -376,7 +377,8 @@ def replicate_predict(
     trace: Annotated[Trace, typer.Option("--trace", rich_help_panel="Workload", help="One of the paper's traces.")],
     clients: Annotated[int, typer.Option("--clients", metavar="N", rich_help_panel="Workload",
                                          help="One of the paper's client counts for that LLM and GPU.")],
-    output_dir: Annotated[Path, _output_dir()] = Path("servecast-output"),
+    output_dir: Annotated[Path, _output_dir(
+        "Where replication.json goes; an earlier one there is replaced.")] = Path("servecast-output"),
     output_format: OutputFormat = Format.table,
 ) -> None:
     """Predict one of the paper's configurations beside its measurement.
@@ -476,7 +478,10 @@ def workload_sample(
     config: Config,
     set_: Sets = None,
     out: Annotated[Path, typer.Option("--out", metavar="FILE", rich_help_panel="Output",
-                                      help="Where the pool goes.")] = Path("pool.jsonl"),
+                                      help="Where the pool goes. An existing FILE is refused without "
+                                           "--overwrite.")] = Path("pool.jsonl"),
+    overwrite: Annotated[bool, typer.Option("--overwrite", rich_help_panel="Output",
+                                            help="Replace an existing FILE.")] = False,
     output_format: OutputFormat = Format.table,
 ) -> None:
     """Draw the request pool of a manifest's workload and write it.
@@ -486,7 +491,7 @@ def workload_sample(
     """
     from servecast.cli import workload_cmd
 
-    workload_cmd.sample(config, set_ or [], out, output_format.value)
+    workload_cmd.sample(config, set_ or [], out, output_format.value, overwrite=overwrite)
 
 
 # manifest ------------------------------------------------------------------------------------------------
@@ -502,25 +507,30 @@ app.add_typer(manifest_app, name="manifest", rich_help_panel="Helpers",
 def manifest_init(
     template: Annotated[Template, typer.Option("--template", help="What the manifest is for.")] = Template.predict,
     out: Annotated[Path | None, typer.Option("--out", metavar="FILE",
-                                             help="Write to FILE instead of standard output.")] = None,
+                                             help="Write to FILE instead of standard output (- is standard "
+                                                  "output). An existing FILE is refused without --overwrite.")] = None,
+    overwrite: Annotated[bool, typer.Option("--overwrite", help="Replace an existing FILE.")] = False,
 ) -> None:
     """Write a commented manifest to start from.
 
-    Every field is present with its default and a one-line explanation; the component versions are pinned to
-    today's.
+    It holds the fields a prediction needs, each with an example value and a one-line note, and versions set to the
+    month of the newest components. `servecast manifest explain` describes any field, those left out too.
     """
     from servecast.core import versions
 
     text = versions.template(template.value)
-    if out is None:
+    if out is None or str(out) == "-":  # --out - wrote a file named "-"
         typer.echo(text, nl=False)
-    else:
-        try:
-            out.write_text(text, encoding="utf-8")
-        except OSError as error:  # an internal error (FileNotFoundError) used to say "please report it"
-            typer.echo(f"servecast manifest init: --out: cannot write {out}: {error.strerror}", err=True)
-            raise typer.Exit(3) from None
-        typer.echo(f"wrote {out}", err=True)
+        return
+    if out.exists() and not overwrite:  # a manifest the user had edited was replaced without a word
+        typer.echo(f"servecast manifest init: --out: {out} exists; give --overwrite to replace it", err=True)
+        raise typer.Exit(3)
+    try:
+        out.write_text(text, encoding="utf-8")
+    except OSError as error:  # an internal error (FileNotFoundError) used to say "please report it"
+        typer.echo(f"servecast manifest init: --out: cannot write {out}: {error.strerror}", err=True)
+        raise typer.Exit(3) from None
+    typer.echo(f"wrote {out}", err=True)
 
 
 @manifest_app.command("show", epilog=_examples("servecast manifest show example-a100 > example-a100.yaml",

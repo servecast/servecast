@@ -24,8 +24,7 @@
 │                                                           [required]                             │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
-│ --output-dir        DIR           Where the results go. A non-empty directory is refused without │
-│                                   --overwrite.                                                   │
+│ --output-dir        DIR           Where replication.json goes; an earlier one there is replaced. │
 │                                   [default: servecast-output]                                    │
 │ --format            <table|json>  How the summary is printed. Files on disk do not change.       │
 │                                   [default: table]                                               │

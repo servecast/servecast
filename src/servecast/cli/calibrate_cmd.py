@@ -8,6 +8,9 @@ from typing import NoReturn
 
 import typer
 
+#: what calibrate writes in --output-dir: a folder holding only these is an earlier calibration, which it replaces
+OUTPUTS = ("calibration.json", "run.json")
+
 
 def _fail(status: int, message: str) -> NoReturn:
     typer.echo(f"servecast calibrate: {message}", err=True)
@@ -40,15 +43,24 @@ def main(config: Path | None, data: Path | None, versions_date: str | None, name
     else:
         when, hardware = versions_date, None
     assert data is not None
+    shipped = set(P.shipped_calibrations())
     try:
         law = None if when is None else versions.resolve(when)["cost_law"]  # the data name their law; given, the same
         profiling, sha = fit.read_profiling(data)
         if hardware is not None and hardware != profiling["gpu"]:  # the manifest's GPU is the one calibrated
             raise ValueError(f"engine.hardware: {hardware}, but the profiling data in {data} were measured on "
                              f"{profiling['gpu']}")
+        # before the fit: a taken name used to be refused only after it, with exit 2
+        fit.check_free(fit.check_name(name) if name is not None else fit.default_name(profiling), shipped, overwrite)
+        foreign = sorted(p.name for p in output_dir.iterdir() if p.name not in OUTPUTS) if output_dir.is_dir() else []
+        if foreign and not overwrite:  # its calibration.json and run.json replaced someone's files without a word
+            raise fit.NameTakenError(f"--output-dir: {output_dir} holds {', '.join(foreign)}, not an earlier "
+                                     "calibration; give another --output-dir, or --overwrite")
         typer.echo(f"servecast calibrate: fitting cost law {profiling['cost_law']} to {data}", err=True)
         doc = fit.calibrate(profiling, sha, cost_law=law, name=name)
-        path = fit.save(doc, set(P.shipped_calibrations()), overwrite=overwrite)
+        path = fit.save(doc, shipped, overwrite=overwrite)
+    except fit.NameTakenError as error:
+        _fail(3, str(error))
     except ValueError as error:
         _fail(2, str(error))
     inputs = {"profiling data": {"path": str(data), "sha256": sha}}

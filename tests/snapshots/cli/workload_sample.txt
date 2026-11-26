@@ -18,10 +18,12 @@
 │                                  validated.                                                      │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
-│ --out           FILE          Where the pool goes.                                               │
-│                               [default: pool.jsonl]                                              │
-│ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
-│                               [default: table]                                                   │
+│ --out              FILE          Where the pool goes. An existing FILE is refused without        │
+│                                  --overwrite.                                                    │
+│                                  [default: pool.jsonl]                                           │
+│ --overwrite        <bool>        Replace an existing FILE.                                       │
+│ --format           <table|json>  How the summary is printed. Files on disk do not change.        │
+│                                  [default: table]                                                │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
                                                                                                     
  Examples                                                                                           

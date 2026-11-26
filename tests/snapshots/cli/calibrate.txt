@@ -26,7 +26,8 @@
 │                                   [default: servecast-calibration]                               │
 │ --format            <table|json>  How the summary is printed. Files on disk do not change.       │
 │                                   [default: table]                                               │
-│ --overwrite         <bool>        Replace your calibration of the same name.                     │
+│ --overwrite         <bool>        Replace your calibration of the same name, and an --output-dir │
+│                                   that holds other files.                                        │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
                                                                                                     
  Examples                                                                                           

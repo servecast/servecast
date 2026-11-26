@@ -7,9 +7,11 @@ point reached --timeout before converging; 130 interrupted.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import sys
 import tempfile
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, NoReturn
 
@@ -150,6 +152,17 @@ def print_table(doc: dict[str, Any]) -> None:
                    f"{'yes' if point['converged'] else 'NO (' + point['stop_reason'] + ')'}")
 
 
+@contextlib.contextmanager
+def _removed_if_left_empty(directory: Path, created: bool) -> Iterator[None]:
+    """A prediction refused after it made its output folder leaves no empty folder behind (it used to)."""
+    try:
+        yield
+    except BaseException:
+        if created and directory.is_dir() and not any(directory.iterdir()):
+            directory.rmdir()
+        raise
+
+
 def main(config: Path, *, with_: str | None, to: str | None, sets: list[str], sweep: list[str] | None,
          output_dir: Path, overwrite: bool, output_format: str, capture_per_request: bool, jobs: int,
          timeout: float | None) -> None:
@@ -172,36 +185,38 @@ def main(config: Path, *, with_: str | None, to: str | None, sets: list[str], sw
     if known and not overwrite:
         fail(3, f"--output-dir: {output_dir} is not empty; give --overwrite to replace {', '.join(KNOWN_OUTPUTS)} "
                 f"(and remove an earlier {' and '.join(STALE)})")
+    created = not output_dir.exists()  # a refused prediction removes the folder it made
     try:
         output_dir.mkdir(parents=True, exist_ok=True)
         with tempfile.NamedTemporaryFile(dir=output_dir):  # an existing read-only directory passes mkdir
             pass
     except OSError as error:
         fail(3, f"--output-dir: cannot write {output_dir}: {error.strerror}")
-    try:
-        calibration, name, body = resolve_calibration(manifest)
-    except mf.ManifestError as error:
-        fail(2, str(error))
+    with _removed_if_left_empty(output_dir, created):
+        try:
+            calibration, name, body = resolve_calibration(manifest)
+        except mf.ManifestError as error:
+            fail(2, str(error))
 
-    def progress(msg: str) -> None:
-        typer.echo(f"servecast predict: {msg}", err=True)
+        def progress(msg: str) -> None:
+            typer.echo(f"servecast predict: {msg}", err=True)
 
-    try:
-        pl = R.plan(manifest, calibration, name, body, sweep=parse_sweep(sweep), progress=progress,
-                    fit_seconds=timeout)
-        carried = carried_capacity(to, sets, None if original is None else str(original))
-        if carried:
-            pl.warnings.append(carried)
-        for warning in pl.warnings:
-            progress(f"warning: {warning}")
-        progress(f"{len(pl.points)} load point(s)")
-        rows = R.run(pl, jobs=jobs, seconds_budget=timeout, keep_requests=capture_per_request)
-    except R.ManifestError as error:
-        fail(2, str(error))
-    except R.FitTimeoutError as error:
-        fail(124, str(error))
-    except KeyboardInterrupt:
-        fail(130, "interrupted")
+        try:
+            pl = R.plan(manifest, calibration, name, body, sweep=parse_sweep(sweep), progress=progress,
+                        fit_seconds=timeout)
+            carried = carried_capacity(to, sets, None if original is None else str(original))
+            if carried:
+                pl.warnings.append(carried)
+            for warning in pl.warnings:
+                progress(f"warning: {warning}")
+            progress(f"{len(pl.points)} load point(s)")
+            rows = R.run(pl, jobs=jobs, seconds_budget=timeout, keep_requests=capture_per_request)
+        except R.ManifestError as error:
+            fail(2, str(error))
+        except R.FitTimeoutError as error:
+            fail(124, str(error))
+        except KeyboardInterrupt:
+            fail(130, "interrupted")
     doc = R.prediction_document(pl, rows, R.resolved_manifest(manifest, pl))
     try:
         for stale in STALE:  # not `name`, which is the calibration's and goes into run.json below

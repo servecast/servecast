@@ -177,15 +177,26 @@ def user_path(name: str) -> Path:
     return data_dir() / "calibrations" / f"{name}.json"
 
 
-def save(doc: dict[str, Any], shipped: set[str], overwrite: bool = False) -> Path:
-    """Saved under the user's data directory, by name; a shipped calibration's name is refused."""
-    name = doc["name"]
+class NameTakenError(ValueError):
+    """One of the user's calibrations has the name, and it is not to be replaced: a refused resource."""
+
+
+def check_free(name: str, shipped: set[str], overwrite: bool = False) -> None:
+    """A name a calibration can be saved under: not a shipped calibration's (ValueError), and not one of the user's
+    unless it is to be replaced (NameTakenError). calibrate checks it before the fit, which takes seconds to minutes."""
     if name in shipped:
         raise ValueError(f"{name} is the name of a shipped calibration; choose another with --name")
     path = user_path(name)
     if path.exists() and not overwrite:
-        raise ValueError(f"a calibration named {name} exists ({path}); choose another name, or replace it with "
-                         "--overwrite")
+        raise NameTakenError(f"a calibration named {name} exists ({path}); choose another name, or replace it with "
+                             "--overwrite")
+
+
+def save(doc: dict[str, Any], shipped: set[str], overwrite: bool = False) -> Path:
+    """Saved under the user's data directory, by name; a shipped calibration's name is refused."""
+    name = doc["name"]
+    check_free(name, shipped, overwrite)
+    path = user_path(name)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(doc, indent=1) + "\n", encoding="utf-8")
     return path

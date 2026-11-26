@@ -6,6 +6,7 @@ import json
 import textwrap
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from servecast.cli.app import app
@@ -37,6 +38,33 @@ def test_set_takes_part_in_the_validation(tmp_path: Path) -> None:
     path = write(tmp_path, PREDICT_WITH_A_TRACE)
     result = RUN.invoke(app, ["manifest", "validate", "-c", str(path), "--set", "traffic.load.concurrency=0"])
     assert result.exit_code == 2 and "traffic.load.concurrency" in result.output
+
+
+@pytest.mark.parametrize(("setting", "field"), [
+    # the review's MF-07: an infinite think time was valid, then predict crashed with an OverflowError
+    ("traffic.load.think_time_ms=.inf", "traffic.load.think_time_ms"),
+    ("traffic.load.think_time_ms=.nan", "traffic.load.think_time_ms"),
+    # the review's MF-17: a mean below one token was valid, explain said "> 0", and predict refused it
+    ("traffic.source={type: synthetic, input_tokens: {mean: 0.5}, output_tokens: {mean: 100}}",
+     "traffic.source.input_tokens.mean"),
+])
+def test_a_value_predict_cannot_take_is_not_valid(tmp_path: Path, setting: str, field: str) -> None:
+    path = write(tmp_path, PREDICT_WITH_A_TRACE)
+    result = RUN.invoke(app, ["manifest", "validate", "-c", str(path), "--set", setting])
+    assert result.exit_code == 2 and field in result.output, result.output
+
+
+@pytest.mark.parametrize("text", ["", "- a list\n", "just a string\n"])
+def test_a_file_that_is_not_a_mapping_says_so(tmp_path: Path, text: str) -> None:
+    """The review's MF-18: validate reported "(manifest): unknown field" for an empty file."""
+    result = RUN.invoke(app, ["manifest", "validate", "-c", str(write(tmp_path, text))])
+    assert result.exit_code == 2 and "a manifest is a YAML mapping" in result.output, result.output
+    assert "unknown field" not in result.output
+
+
+def test_explain_gives_the_mean_lengths_real_limit() -> None:
+    result = RUN.invoke(app, ["manifest", "explain", "traffic.source.input_tokens.mean"])
+    assert result.exit_code == 0 and ">= 1" in result.output, result.output
 
 
 def test_json_output_is_machine_readable(tmp_path: Path) -> None:

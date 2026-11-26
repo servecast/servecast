@@ -32,7 +32,8 @@ DOTTED_ID_HINT = ("write the version as a string with a hyphen, e.g. 2026-10: YA
 
 
 class Strict(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    # no field of a manifest is infinite or not a number: an infinite think time used to pass and crash predict
+    model_config = ConfigDict(extra="forbid", frozen=True, allow_inf_nan=False)
 
 
 def _no_number(value: Any) -> Any:
@@ -186,7 +187,7 @@ class VersionsSpec(Strict):
 # traffic ---------------------------------------------------------------------------------------------------
 
 class LengthSpec(Strict):
-    mean: float = Field(gt=0, description="Mean length, in tokens.")
+    mean: float = Field(ge=1, description="Mean length, in tokens.")
     variance: float | None = Field(
         None, gt=0, description="Variance, in tokens squared. Unset: the length sampler's default; sampler 2026-11 "
         "uses mean (mean - 1), the variance of a geometric distribution.")

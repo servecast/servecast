@@ -13,6 +13,8 @@ import dataclasses
 from collections.abc import Mapping
 from typing import Any
 
+from pydantic import ValidationError
+
 from servecast.core import estimator as estimators
 from servecast.core import gpus, versions
 from servecast.core import pool as pools
@@ -21,6 +23,7 @@ from servecast.core.manifest import (
     KV_CAPACITY_REQUIRED,
     MIN_POOL,
     PREFIX_CACHING_NOT_MODELLED,
+    Load,
     Manifest,
     ManifestError,
     SyntheticSource,
@@ -390,12 +393,20 @@ def load_points(m: Manifest, sweep: tuple[str, list[str]] | None) -> list[tuple[
                             "sweep a manifest with one level")
     load = levels[0]
     field, values = sweep
-    try:
-        if field == "traffic.load.concurrency":
-            return [(int(v), load.think_time_ms) for v in values]
-        if field == "traffic.load.think_time_ms":
-            return [(load.concurrency, float(v)) for v in values]
-    except ValueError as error:
-        raise ManifestError(f"--sweep: {error}") from error
-    raise ManifestError(f"--sweep: {field} cannot be swept; this version sweeps traffic.load.concurrency or "
-                        "traffic.load.think_time_ms")
+    key = {"traffic.load.concurrency": "concurrency", "traffic.load.think_time_ms": "think_time_ms"}.get(field)
+    if key is None:
+        raise ManifestError(f"--sweep: {field} cannot be swept; this version sweeps traffic.load.concurrency or "
+                            "traffic.load.think_time_ms")
+    # each value as the manifest would take it, all refused at once: 0, a negative or a non-finite value used to end
+    # in an internal error, after the points before it had run
+    points, refused = [], []
+    for value in values:
+        try:
+            level = Load.model_validate({**load.model_dump(), key: value})
+        except ValidationError as error:
+            refused.append(f"--sweep {field}={value}: {error.errors()[0]['msg']}")
+            continue
+        points.append((level.concurrency, level.think_time_ms))
+    if refused:
+        raise ManifestError("; ".join(refused))
+    return points

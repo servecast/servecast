@@ -275,6 +275,7 @@ def plan(m: Manifest, calibration: Mapping[str, Any], calibration_name: str, cal
     """Resolve everything a prediction needs, refusing a manifest it cannot run."""
     if m.traffic is None:
         raise ManifestError("traffic: required by predict: the source of the lengths, the load and the stop rule")
+    points = load_points(m, sweep)  # first: a load it cannot run is refused before the workload law is fitted
     conditions = calibration["conditions"]
     gpu = gpus.get(conditions["gpu"])
     if m.engine.hardware is not None and m.engine.hardware != gpu.id:
@@ -306,7 +307,7 @@ def plan(m: Manifest, calibration: Mapping[str, Any], calibration_name: str, cal
                 llm=llm, engine=engine, engine_resolved=engine_resolved, deployment=deployment,
                 pool_p=list(p),
                 pool_g=list(g), pool_sha256=pools.digest(p, g), pool_header=header, law=law,
-                targets=resolve_targets(m, components["estimator"]), points=load_points(m, sweep),
+                targets=resolve_targets(m, components["estimator"]), points=points,
                 seed=m.traffic.seed, validity=validity, warnings=warnings)
 
 

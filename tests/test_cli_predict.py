@@ -317,6 +317,24 @@ def test_workload_sample_reports_an_unknown_version_as_an_input_error(tmp_path: 
     assert r.exit_code == 2 and "versions" in r.output and "internal error" not in r.output, r.output
 
 
+@pytest.mark.parametrize("args", [
+    # the review's MF-06 and N2: the swept values skipped validation; 0 ended in an internal error after the 4-client
+    # point had run, and -3 and 2.5 too
+    ("--sweep", "traffic.load.concurrency=4,0,-3,2.5"),
+    ("--sweep", "traffic.load.think_time_ms=500,0,nan,inf"),
+    # the review's MF-07: an infinite think time crashed predict with an OverflowError
+    ("--set", "traffic.load.think_time_ms=.inf"),
+])
+def test_a_load_predict_cannot_run_is_refused_before_any_point_runs(tmp_path: Path, args: tuple) -> None:
+    code, output, out = predict(tmp_path, BASE, *args)
+    assert code == 2 and "internal error" not in output and "load point" not in output, output
+    assert not (out / "prediction.json").exists()
+    if args[0] == "--sweep":  # every value predict cannot take, at once
+        field, values = args[1].split("=")
+        bad = [v for v in values.split(",") if v not in ("4", "500")]
+        assert all(f"{field}={v}" in output for v in bad), output
+
+
 @pytest.mark.parametrize("args", [(), ("--timeout", "120")])
 def test_a_pool_the_workload_fitter_refuses_is_an_input_error(tmp_path: Path, args: tuple) -> None:
     """The review's MF-03: 100 synthetic requests, the documented minimum, ended in an internal error. The fitter

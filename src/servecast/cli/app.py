@@ -555,7 +555,10 @@ def manifest_validate(config: Config, set_: Sets = None, output_format: OutputFo
     except yaml.YAMLError as error:
         typer.echo(f"{config}: not valid YAML: {error}", err=True)
         raise typer.Exit(2) from error
-    raw, problems = manifest.apply_sets(raw if isinstance(raw, dict) else {"": raw}, set_ or [])
+    if not isinstance(raw, dict):  # as predict says it: an empty file was reported as "(manifest): unknown field"
+        typer.echo(f"{config}: a manifest is a YAML mapping", err=True)
+        raise typer.Exit(2)
+    raw, problems = manifest.apply_sets(raw, set_ or [])
     _, invalid = manifest.validate(raw)
     problems += invalid
     if output_format is Format.json:

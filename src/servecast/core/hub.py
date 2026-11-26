@@ -10,6 +10,7 @@ import json
 import os
 import re
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,20 @@ from servecast.core.paths import cache_dir
 REPO_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*$")
 URL = "https://huggingface.co/{repo}/resolve/{revision}/config.json"
 TIMEOUT_S = 30
+
+
+class _TokenStaysOnTheHub(urllib.request.HTTPRedirectHandler):
+    """Follows the hub's redirects, which stay on its host, and sends the token on only there and only over HTTPS when
+    it came over HTTPS: urllib copies every header of a request to the location it is redirected to, whatever the
+    host."""
+
+    def redirect_request(self, req: urllib.request.Request, fp: Any, code: int, msg: str, headers: Any,
+                         newurl: str) -> urllib.request.Request | None:
+        new = super().redirect_request(req, fp, code, msg, headers, newurl)
+        old, to = urllib.parse.urlsplit(req.full_url), urllib.parse.urlsplit(newurl)
+        if new is not None and (to.hostname != old.hostname or (old.scheme == "https" and to.scheme != "https")):
+            new.remove_header("Authorization")
+        return new
 
 
 def cached_path(repo_id: str, revision: str = "main") -> Path:
@@ -40,7 +55,7 @@ def fetch_config(repo_id: str, revision: str = "main", *, offline: bool = False)
     if token:
         request.add_header("Authorization", f"Bearer {token}")
     try:
-        with urllib.request.urlopen(request, timeout=TIMEOUT_S) as response:
+        with urllib.request.build_opener(_TokenStaysOnTheHub).open(request, timeout=TIMEOUT_S) as response:
             body = response.read()
     except urllib.error.HTTPError as error:
         if error.code in (401, 403):

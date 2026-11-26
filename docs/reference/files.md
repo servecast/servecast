@@ -53,3 +53,8 @@ calibrations were fitted with; an LLM you add is read as its `config.json` would
 predicts the same numbers again. `run.json` records the command line, the version of ServeCast, when it ran, each
 input with its sha256 (the manifest, the calibration, the request pool, the profiling data), the component versions,
 and the other files of the folder.
+
+Look at two files before you share a folder. `run.json` keeps the command line and the input paths as you typed them,
+so an absolute path shows your user name. `engine.log` is vLLM's own output, kept unedited, so it holds whatever vLLM
+prints about this machine. `environment.json` never records a GPU's serial number, UUID or bus id, or the host name.
+ServeCast never writes a token. It reads `HF_TOKEN` from the environment and sends it only to the Hugging Face hub.

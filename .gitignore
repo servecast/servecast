@@ -5,3 +5,8 @@ dist/
 *.egg-info/
 .venv*/
 site/
+
+# secrets and local files: never part of the repository
+.env
+.env.*
+.DS_Store

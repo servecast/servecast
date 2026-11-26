@@ -8,6 +8,8 @@
 
 <p align="center"><a href="https://arxiv.org/abs/XXXX.XXXXX"><img alt="arXiv" src="https://img.shields.io/badge/arXiv-XXXX.XXXXX-b31b1b.svg"></a></p>
 
+<!-- pypi-links: the PyPI page is built from this README (pyproject.toml, tool.hatch.metadata.hooks.fancy-pypi-readme) -->
+
 ServeCast predicts how fast vLLM will serve an LLM on a given GPU, so you can check the numbers against your
 service-level objectives (SLOs) before you deploy. For a given workload, it predicts the time to first token (TTFT)
 and the time per output token (TPOT), both as means and 95th percentiles, and the throughput in completed requests per
@@ -110,4 +112,4 @@ If you use ServeCast, please cite the paper that introduced it:
 
 ## License
 
-Apache License 2.0 (see `LICENSE`). ServeCast is not affiliated with the vLLM project.
+Apache License 2.0 (see `LICENSE`).

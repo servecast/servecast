@@ -1,12 +1,12 @@
 [build-system]
-requires = ["hatchling>=1.27"]
+requires = ["hatchling>=1.27", "hatch-fancy-pypi-readme==25.1.0"]
 build-backend = "hatchling.build"
 
 [project]
 name = "servecast"
 version = "0.0.1"
 description = "Predicts LLM serving performance (TTFT, TPOT, throughput) on a GPU running vLLM."
-readme = "README.md"
+dynamic = ["readme"]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
@@ -47,6 +47,60 @@ Issues = "https://github.com/servecast/servecast/issues"
 
 [project.scripts]
 servecast = "servecast.cli.app:main"
+
+# The PyPI page: README.md as it is, with a links line under its header, the long GPU flow replaced by a link to its
+# guide, every relative link made absolute, and the newest CHANGELOG.md section last. tests/test_pypi_readme.py
+# checks the page in the installed metadata against README.md.
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.md"
+end-before = "<!-- pypi-links"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+text = """<p align="center"><a href="https://github.com/servecast/servecast">GitHub</a> · <a href="https://servecast.github.io/servecast/">Documentation</a> · <a href="https://github.com/servecast/servecast/issues">Issues</a></p>
+
+"""
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.md"
+start-after = "<!-- pypi-links"
+end-before = "## On your GPU"
+pattern = '^[^\n]*?-->\n\n(.*)'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+text = """## On your GPU
+
+The guide [On your GPU](https://servecast.github.io/servecast/guides/calibrate/) runs the whole flow on a GPU of
+yours. It measures the GPU, fits its calibration, predicts, serves the same workload with vLLM, and compares the
+measurement with the prediction.
+
+"""
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.md"
+start-at = "## What it does"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+text = "\n## What's new in $HFPR_VERSION\n\n"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "CHANGELOG.md"
+pattern = '\n## [^\n]*\n\n(.*?)(?=\n## |\Z)'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+# a page of the documentation: the site, not the Markdown source
+pattern = '\]\(docs/([^)#]+?)\.md(#[^)]*)?\)'
+replacement = '](https://servecast.github.io/servecast/\1/\2)'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = 'src="docs/assets/'
+replacement = 'src="https://servecast.github.io/servecast/assets/'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\(see `LICENSE`\)'
+replacement = '(see [LICENSE](https://github.com/servecast/servecast/blob/v$HFPR_VERSION/LICENSE))'
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/servecast"]

@@ -70,6 +70,10 @@ class SchemaKind(StrEnum):
     prediction = "prediction"
     measurement = "measurement"
     comparison = "comparison"
+    run = "run"
+    gpus = "gpus"
+    models = "models"
+    components = "components"
 
 
 class Experiment(StrEnum):

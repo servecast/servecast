@@ -62,8 +62,24 @@ def _type(node: dict[str, Any], defs: dict[str, Any]) -> str:
     return str(kind)
 
 
-def _table(schema: dict[str, Any], defs: dict[str, Any]) -> list[str]:
-    required = set(schema.get("required", []))
+def _required_by_manifest() -> set[tuple[str, str]]:
+    """(model, field) of each field the manifest's own check requires although its model lets it be left out
+    (manifest.REQUIRED): the schema calls them optional, and the table left their required column blank."""
+    from servecast.core import manifest
+
+    out = set()
+    for path in manifest.REQUIRED:
+        *parents, field = path.split(".")
+        model: Any = manifest.Manifest
+        for key in parents:
+            model = manifest._models_in(model.model_fields[key].annotation)[0]
+        out.add((model.__name__, field))
+    return out
+
+
+def _table(schema: dict[str, Any], defs: dict[str, Any], model: str = "",
+           also: set[tuple[str, str]] | None = None) -> list[str]:
+    required = set(schema.get("required", [])) | {field for m, field in also or () if m == model}
     rows = ["| field | type | required | default | meaning |", "|---|---|---|---|---|"]
     for name, node in (schema.get("properties") or {}).items():
         default = f"`{node['default']}`" if node.get("default") not in (None, {}, []) else ""
@@ -81,10 +97,11 @@ def render() -> str:
         who = WHO[kind]
         parts += [f"## {kind}", "", f"{who[0].upper()}{who[1:]}.", ""]
         parts += _table(schema, defs)
+        also = _required_by_manifest() if kind == "manifest" else set()
         for name, sub in sorted(defs.items()):
             if sub.get("properties"):
                 parts += ["", f"### {kind}: {name}", ""]
-                parts += _table(sub, defs)
+                parts += _table(sub, defs, name, also)
         parts.append("")
     return "\n".join(parts).rstrip() + "\n"
 

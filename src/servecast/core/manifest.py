@@ -52,7 +52,7 @@ class Parallelism(Strict):
     @classmethod
     def _only_one(cls, value: int) -> int:
         if value != 1:
-            raise ValueError("tensor parallelism above 1 is not supported yet; see the project's roadmap issue")
+            raise ValueError("tensor parallelism above 1 is not supported yet: the cost laws price one GPU")
         return value
 
 

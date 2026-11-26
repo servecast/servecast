@@ -60,7 +60,7 @@ You write it; every command reads it.
 |---|---|---|---|---|
 | `mode` | `aggregated` |  | `aggregated` | One engine serving prefill and decode. |
 | `model` | string or null |  |  | The LLM to predict: a Hugging Face id or a local directory holding config.json. `--to` sets it. |
-| `hardware` | string or null |  |  | The GPU, as an id that servecast list gpus lists, e.g. a100_sxm_40gb (shipped, or in gpus.json in your data directory). Required: the GPU predict simulates, with a calibration of that GPU; the GPU profile calibration and profile serving measure, which refuse another; the GPU whose profiling data calibrate fits. |
+| `hardware` | string or null | yes |  | The GPU, as an id that servecast list gpus lists, e.g. a100_sxm_40gb (shipped, or in gpus.json in your data directory). Required: the GPU predict simulates, with a calibration of that GPU; the GPU profile calibration and profile serving measure, which refuse another; the GPU whose profiling data calibrate fits. |
 | `backend` | `vllm` |  | `vllm` | The serving engine. |
 | `backend_version` | string or null |  |  | The vLLM version. ServeCast models vLLM 0.25.1, the version every calibration and measurement uses; another is refused. Unset: 0.25.1. |
 | `context_length` | integer or `max` |  | `max` | Longest prompt plus output, in tokens; max: the LLM's own limit (its config.json's max_position_embeddings). A trace request longer than this is left out, as vLLM would refuse it. |
@@ -74,7 +74,7 @@ You write it; every command reads it.
 |---|---|---|---|---|
 | `block_size` | integer or null |  |  | Tokens per KV-cache block, a multiple of 16: vLLM 0.25.1's FlashAttention backend takes no other. Unset: 16, vLLM 0.25.1's default on these GPUs. |
 | `prefix_caching` | boolean or null |  |  | vLLM's prefix caching. ServeCast computes every prompt in full, so true is refused, and profile serving runs vLLM with it off (its prompts all start with the same tokens). Unset: off. |
-| `capacity` | Capacity or null |  |  | How much KV cache the engine gets. Required: ServeCast does not estimate it, and every command refuses a manifest without it. |
+| `capacity` | Capacity or null | yes |  | How much KV cache the engine gets. Required: ServeCast does not estimate it, and every command refuses a manifest without it. |
 
 ### manifest: LengthSpec
 

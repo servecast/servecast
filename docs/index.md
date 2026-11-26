@@ -90,7 +90,7 @@ Score the prediction against the measurement, load point by load point, with sig
 
 Fit a GPU's cost law once from microbenchmarks, then predict any dense LLM on that GPU.
 
-`servecast calibrate -c m.yaml`{ .sc-cmd }
+`servecast calibrate --data profiling --name my-gpu`{ .sc-cmd }
 
 </div>
 

@@ -1,7 +1,8 @@
 # Files and folders
 
-Every command reads its inputs from a few known places and writes its outputs to one folder of its own, beside a
-`run.json` that records how they were made. This page lists both. The format of every file is in
+Every command reads its inputs from a few known places and writes its outputs to a folder or a file of its own.
+`predict` and `calibrate` also write a `run.json` beside their outputs, which records how they were made. This page
+lists both. The format of every file is in
 [File formats](formats.md).
 
 ## What ships with ServeCast

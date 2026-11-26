@@ -11,9 +11,11 @@ and why each exclusion exists.
 - Closed workloads, with N clients and an exponential think time.
 - Python 3.11 to 3.14 for the commands that run on any computer.
 
-The per-GPU cost law, `c62ebe75`, is calibrated for the A100-SXM4-40GB in this release. It was fitted on synthetic
-models and checked on the six LLMs of the paper, which have 12 to 36 layers and widths from 1024 to 4096, and its grid
-of synthetic layers covers feed-forward ratios from 2.67 to 5.5. The calibrations of the law of
+The per-GPU cost law, `c62ebe75`, is calibrated for the A100-SXM4-40GB in this release. It was fitted on 8 synthetic
+models with 12 to 36 layers and widths from 1024 to 3072, and checked on the six LLMs of the paper, which have 24 to 36
+layers and widths from 2048 to 4096. Its grid of synthetic layers covers feed-forward ratios from 2.75 to 5.5, and an
+LLM below that range takes the grid's value at 2.75, as Llama-3.2-3B (2.67) and the two DeepSeek LLMs (2.69) do. The
+calibrations of the law of
 [the paper](cite.md), `d9cbf1d3`, cover the A100-SXM4-40GB, the H100 SXM and the RTX 3090 Ti for the six LLMs of the
 paper.
 
@@ -23,7 +25,8 @@ paper.
 |---|---|
 | tensor and pipeline parallelism | the cost laws price one GPU; communication between GPUs is not in them. A manifest with `parallelism.tensor` above 1 is refused |
 | mixture-of-experts models | the cost of a beat depends on which experts the tokens reach, which the laws do not represent. Refused when `config.json` names experts |
-| quantized weights (FP8, FP4, INT8, INT4) | the laws assume 16-bit weights and the matching kernels |
+| weights of another precision: FP32, or quantized (FP8, FP4, INT8, INT4) | the laws assume 16-bit weights and the matching kernels. Refused when `config.json` names another type or a quantization |
+| attention over a sliding window | the laws price attention over the whole context. Refused when `config.json` sets a window shorter than the context |
 | prefix caching and shared prefixes | the model computes every prompt in full. A trace whose prefix-block ids repeat is accepted with a warning |
 | open-loop arrivals (Poisson or a trace's timestamps) | the population model and the estimator are built for closed workloads |
 | speculative decoding | a beat would emit a variable number of tokens per request |

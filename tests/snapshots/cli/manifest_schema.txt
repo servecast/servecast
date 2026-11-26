@@ -6,10 +6,10 @@
  Point an editor at the manifest's schema to get completion and checks while writing it.            
                                                                                                     
 ╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
-│ --kind          <manifest|pool|profiling-data|probe|gem  Which file's schema.                    │
-│                 m|calibration|prediction|measurement|co  [default: manifest]                     │
-│                 mparison>                                                                        │
-│ --help  -h      <bool>                                   Show this message and exit.             │
+│ --kind          <manifest|pool|profiling-data|probe|ge  Which file's schema.                     │
+│                 mm|calibration|prediction|measurement|  [default: manifest]                      │
+│                 comparison|run|gpus|models|components>                                           │
+│ --help  -h      <bool>                                  Show this message and exit.              │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
                                                                                                     
  Examples                                                                                           

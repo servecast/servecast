@@ -161,3 +161,14 @@ def test_explain_prints_meaning_type_and_limits() -> None:
 def test_explain_suggests_a_close_field() -> None:
     result = RUN.invoke(app, ["manifest", "explain", "traffic.load.concurency"])
     assert result.exit_code == 2 and "did you mean concurrency?" in result.output
+
+
+def test_every_documented_schema_can_be_printed() -> None:
+    """The review's site-5 and DC-03: run, gpus, models and components were documented and refused."""
+    from servecast.cli.app import SchemaKind
+    from servecast.core.formats import SCHEMAS
+
+    assert {k.value for k in SchemaKind} == set(SCHEMAS)
+    for kind in SCHEMAS:
+        result = RUN.invoke(app, ["manifest", "schema", "--kind", kind])
+        assert result.exit_code == 0 and json.loads(result.output)["properties"], kind

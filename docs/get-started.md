@@ -15,7 +15,7 @@ Install ServeCast as [Install](install.md) describes. Predicting needs no GPU.
 
 ## 1. Fit ServeCast to the GPU
 
-ServeCast prices each iteration of vLLM with a cost law, whose coefficients it fits to measurements of the GPU, called
+ServeCast prices each engine step of vLLM with a cost law, whose coefficients it fits to measurements of the GPU, called
 its profiling data. This release has two versions of the cost law, the one of [the paper](cite.md) and a research preview that is
 more accurate and transfers better to LLMs not used to calibrate the GPU. The example uses the research preview. Its
 profiling data for an A100-SXM4-40GB ship with ServeCast under the name `a100_sxm_40gb/c62ebe75`, the GPU followed by
@@ -84,7 +84,7 @@ traffic:
 `engine.model` and `engine.hardware` are names that ServeCast looks up in two files that ship with it. `models.json`
 holds each LLM's architecture, such as its layers, widths and attention heads
 ([fields](reference/formats.md#models-modelentry)), and `gpus.json` each GPU's datasheet numbers, such as its peak
-compute and memory bandwidth ([fields](reference/formats.md#gpus-gpuentry)). The cost law prices each iteration of vLLM
+compute and memory bandwidth ([fields](reference/formats.md#gpus-gpuentry)). The cost law prices each engine step of vLLM
 from these numbers, and an LLM that `models.json` does not list is read from its `config.json`.
 
 The manifest sets only what this example needs. Every other vLLM setting, such as the maximum number of tokens in a

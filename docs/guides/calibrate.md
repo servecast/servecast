@@ -128,7 +128,7 @@ run the five steps with that manifest.
 ### Add the GPU to the registry
 
 `servecast list gpus` lists the GPUs ServeCast knows. ServeCast recognizes the GPU of the computer it runs on by the
-name the driver reports, and its cost law prices each iteration of vLLM from the GPU's datasheet numbers. A GPU of your
+name the driver reports, and its cost law prices each engine step of vLLM from the GPU's datasheet numbers. A GPU of your
 own goes in `gpus.json` in your data directory, `~/.local/share/servecast` on Linux
 ([Files and folders](../reference/files.md#your-files)). On a computer with a GPU it does not know, `servecast doctor`
 names that file. For an A100 with 80 GB of memory, the file reads as follows.
@@ -238,7 +238,7 @@ traffic:
 
 `engine.model` is a Hugging Face id, or a local directory holding the LLM's `config.json`. ServeCast reads only that
 file, never the weights, and `servecast list models` lists the LLMs it knows without a network. It predicts dense LLMs
-with 16-bit weights, and the research preview was checked on LLMs of 12 to 36 layers
+with 16-bit weights, and the research preview was checked on LLMs of 24 to 36 layers
 ([Limits](../limits.md#in-scope)). The 52,875 blocks are the size vLLM gave Qwen2.5-3B on this A100 in a run of the
 paper.
 

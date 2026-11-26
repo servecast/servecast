@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import copy
 import difflib
+import re
 import typing
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -490,35 +491,84 @@ def _models_in(annotation: Any) -> list[type[BaseModel]]:
     return [m for arg in typing.get_args(annotation) for m in _models_in(arg)]
 
 
-def _model_at(loc: tuple[Any, ...]) -> type[BaseModel] | None:
+def _member(models: list[type[BaseModel]], node: Any) -> type[BaseModel] | None:
+    """The member of a union the input names by its `type` (a synthetic source, not a trace's), else the first."""
+    if isinstance(node, dict) and "type" in node:
+        for model in models:
+            field = model.model_fields.get("type")
+            if field is not None and node["type"] in typing.get_args(field.annotation):
+                return model
+    return next(iter(models), None)
+
+
+def _model_at(loc: tuple[Any, ...], raw: Any) -> type[BaseModel] | None:
+    """The model of the mapping at `loc`, walking the input beside it to choose a union's member."""
     model: Any = Manifest
+    node = raw
     for key in loc:
-        if str(key).isdigit():
-            continue  # a list's entry holds the list's model
+        if str(key).isdigit():  # a list's entry holds the list's model
+            node = node[int(key)] if isinstance(node, list) and int(key) < len(node) else None
+            continue
         field = getattr(model, "model_fields", {}).get(key)
         if field is None:
             return None
-        model = next(iter(_models_in(field.annotation)), None)
+        node = node.get(key) if isinstance(node, dict) else None
+        model = _member(_models_in(field.annotation), node)
         if model is None:
             return None
     return model
 
 
-def _problems_from(error: ValidationError) -> list[Problem]:
+def _closest(word: str, choices: Iterable[str]) -> str | None:
+    """The field a misspelling most likely meant: a transposition first ("modle" is model, not mode), then difflib's
+    closest."""
+    close = difflib.get_close_matches(word, list(choices), n=3)
+    return next((c for c in close if sorted(c) == sorted(word)), close[0] if close else None)
+
+
+#: a union member's tag in a pydantic location, not a field the user wrote: a model's class name (fields are
+#: lowercase), or a constrained, literal or plain value; validators and tagged unions add tags of their own
+_ALTERNATIVE = re.compile(r"^(?:[A-Z]\w*|constrained-\w+|literal\[.*\]|int|str|float|bool|none|list\[.*\]|dict\[.*\])$")
+_WRAPPER = ("function-", "tagged-union")
+
+
+def _problems_from(error: ValidationError, raw: Any) -> list[Problem]:
+    """The schema's complaints on the paths the user wrote. Where a field takes a value or a mapping, pydantic reports
+    each alternative under its tag: the user's input chooses which apply (a mapping, or a value), and the value's
+    alternatives make one problem, which says when a mapping would do too."""
     problems: list[Problem] = []
+    values: dict[str, list[str]] = {}  # a union field's path -> its value alternatives' messages
+    mapping_too: set[str] = set()      # union fields whose input was a value, although a mapping would do
     for item in error.errors():
-        loc = tuple(str(part) for part in item["loc"] if not str(part).startswith(("function-", "tagged-union")))
+        parts = [str(part) for part in item["loc"] if not str(part).startswith(_WRAPPER)]
+        tag = next((i for i, part in enumerate(parts) if _ALTERNATIVE.match(part)), None)
+        loc = tuple(part for part in parts if not _ALTERNATIVE.match(part))
         if len(loc) > 2 and ((loc[:2] == ("traffic", "source") and loc[2] in ("trace", "synthetic"))
                              or (loc[:2] == ("traffic", "load") and loc[2] in ("level", "levels"))):
             loc = loc[:2] + loc[3:]  # the union's tag is not a field the user wrote
-        path = ".".join(loc) or "(manifest)"
         message = item["msg"].removeprefix("Value error, ")
+        if item["type"] == "string_pattern_mismatch" and (item.get("ctx") or {}).get("pattern") == YEAR_MONTH:
+            message = "Input should be a year-month such as 2026-11"
+        if tag is not None:
+            field = ".".join(part for part in parts[:tag] if not _ALTERNATIVE.match(part))
+            mapping = parts[tag][0].isupper()
+            if isinstance(_get(raw, *field.split(".")), dict) != mapping:  # an alternative the input did not choose
+                if mapping:
+                    mapping_too.add(field)
+                continue
+            if not mapping:
+                values.setdefault(field, []).append(message)
+                continue
         if item["type"] == "extra_forbidden" and loc:
-            parent = _model_at(loc[:-1])
-            choices = list(parent.model_fields) if parent else []
-            close = difflib.get_close_matches(loc[-1], choices, n=1)
-            message = f"unknown field{f'; did you mean {close[0]}?' if close else ''}"
-        problems.append(Problem(path, message))
+            parent = _model_at(loc[:-1], raw)
+            close = _closest(loc[-1], parent.model_fields if parent else [])
+            message = f"unknown field{f'; did you mean {close}?' if close else ''}"
+        problems.append(Problem(".".join(loc) or "(manifest)", message))
+    for field, messages in values.items():
+        merged = messages[0] + "".join(f", or {m.removeprefix('Input should be ')}" for m in messages[1:])
+        if field in mapping_too:
+            merged += f", or a mapping (servecast manifest explain {field})"
+        problems.append(Problem(field, merged))
     return problems
 
 
@@ -532,7 +582,10 @@ def validate(raw: Any) -> tuple[Manifest | None, list[Problem]]:
         manifest = Manifest.model_validate(_without(raw, (p.path for p in refused)))
     except ValidationError as error:
         seen = {p.path for p in refused}
-        rest = [p for p in _problems_from(error) if not any(p.path == s or p.path.startswith(s + ".") for s in seen)]
+        # a refused type refuses its mapping: the fields that type would have needed or not taken are not problems
+        seen |= {p.path.removesuffix(".type") for p in refused if p.path.endswith(".type")}
+        rest = [p for p in _problems_from(error, _without(raw, seen))
+                if not any(p.path == s or p.path.startswith(s + ".") for s in seen)]
         return None, refused + absent + rest
     return (None, refused + absent) if refused or absent else (manifest, [])
 

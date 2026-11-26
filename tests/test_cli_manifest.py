@@ -49,6 +49,32 @@ def test_validate_refuses_what_predict_refuses(tmp_path: Path, setting: str, mes
     assert message in validated.output and message in predicted.output, (validated.output, predicted.output)
 
 
+@pytest.mark.parametrize(("setting", "lines"), [
+    # the review's MF-13: a field that takes a value or a mapping printed one line per alternative, each with
+    # pydantic's tag for it in the path (versions.constrained-str, versions.VersionsSpec, ...)
+    ("versions=2026-13",
+     ["versions: Input should be a year-month such as 2026-11, or a mapping (servecast manifest explain versions)"]),
+    ("versions={as_of: 2026-10, estimater: 2026-11}", ["versions.estimater: unknown field; did you mean estimator?"]),
+    ("engine.context_length=maximum",
+     ["engine.context_length: Input should be a valid integer, unable to parse string as an integer, or 'max'"]),
+    ("profile.clock=locked", ["profile.clock: Input should be 'auto' or 'measured', or a mapping (servecast manifest "
+                              "explain profile.clock)"]),
+    # the review's MF-19: "mode" for a transposed "model"; no hint in a synthetic source, whose fields were looked up
+    # in the trace source's; and three lines about a type that does not apply, after it was refused
+    ("engine.modle=x", ["engine.modle: unknown field; did you mean model?"]),
+    ("traffic.source={type: synthetic, input_token: {mean: 5}, output_tokens: {mean: 4}}",
+     ["traffic.source.input_tokens: Field required",
+      "traffic.source.input_token: unknown field; did you mean input_tokens?"]),
+    ("traffic.load={type: poisson, rate: 3}",
+     ["traffic.load.type: closed workloads only: use type: concurrency with concurrency and think_time_ms"]),
+])
+def test_each_problem_is_one_line_on_the_path_the_user_wrote(tmp_path: Path, setting: str, lines: list[str]) -> None:
+    path = template(tmp_path)
+    result = RUN.invoke(app, ["manifest", "validate", "-c", str(path), "--set", setting])
+    got = [line.removeprefix(f"{path}: ") for line in result.output.splitlines() if line.strip()]
+    assert result.exit_code == 2 and got == lines, got
+
+
 def test_the_shipped_example_names_the_command_that_saves_its_calibration(tmp_path: Path,
                                                                            monkeypatch: pytest.MonkeyPatch) -> None:
     """The review's F14, N9 and MF-14: on a fresh install the shipped example was "valid", and predict refused it

@@ -122,7 +122,9 @@ calibration: my-a100
 ```
 
 `prediction.json` holds the same numbers with their 95 % intervals, the manifest with every default filled in, and
-the components that produced them, by name. [Get started](get-started.md) explains each step.
+the components that produced them, by name. The calibration is saved in your data directory, so the first command
+stops when it is run again; add `--overwrite` to fit `my-a100` anew. [Get started](get-started.md) explains each
+step.
 
 ## A load curve in one command
 

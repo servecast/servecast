@@ -28,7 +28,9 @@ This command fits the cost law to those data and saves the result, a calibration
 servecast calibrate --data a100_sxm_40gb/c62ebe75 --name my-a100
 ```
 
-It takes a few seconds and saves the calibration as `my-a100`, the name the manifest of step 2 uses.
+It takes a few seconds and saves the calibration as `my-a100`, the name the manifest of step 2 uses. The
+calibration goes to your data directory, which `servecast doctor` names, and not to the directory you run in, so the
+name stays taken. Run this step again with `--overwrite` to replace it.
 
 ## 2. Predict
 

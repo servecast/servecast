@@ -71,9 +71,18 @@ def test_the_job_takes_a_manifest_and_a_calibration_name_of_your_own(tmp_path: P
     done, calls = run_job(tmp_path, "my.yaml", "my-h100")
     assert done.returncode == 0, done.stderr
     assert not (tmp_path / "my.yaml").exists()  # a manifest of yours is never written by the job
-    assert calls[1:3] == ["servecast profile calibration -c my.yaml --output-dir profiling",
-                          "servecast calibrate --data profiling --name my-h100 --overwrite"]
+    assert calls[1:4] == ["servecast profile calibration -c my.yaml --output-dir profiling",
+                          "servecast calibrate --data profiling --name my-h100 --overwrite",
+                          # the review's MF-15: the prediction read the manifest's calibration, not the one just fitted
+                          "servecast predict -c my.yaml --with my-h100 --output-dir prediction"]
     assert calls[-2] == "servecast profile serving -c my.yaml --output-dir measurement"
+
+
+def test_the_job_refuses_a_manifest_without_a_calibration_name(tmp_path: Path) -> None:
+    """The review's MF-15: one argument fitted a calibration under the default name, replacing one of yours, and
+    predicted with whatever calibration the manifest names."""
+    done, calls = run_job(tmp_path, "my.yaml")
+    assert done.returncode == 2 and "usage:" in done.stderr and calls == []
 
 
 def test_the_job_stops_at_the_first_command_that_fails(tmp_path: Path) -> None:

@@ -3,8 +3,11 @@
 #
 #   sbatch servecast.sbatch                          example-a100.yaml, written with the example manifest that ships
 #                                                    with ServeCast unless the directory has one; calibration my-a100
-#   sbatch servecast.sbatch MANIFEST CALIBRATION     your manifest's path, and the calibration name its
-#                                                    calibration.use gives
+#   sbatch servecast.sbatch MANIFEST CALIBRATION     your manifest's path, and the name to save the calibration
+#                                                    under, which the prediction then uses
+#
+# The calibration fitted here replaces one of yours of the same name (my-a100 without arguments), so pick a new name
+# to keep an earlier one.
 #
 # Activate the Python environment ServeCast is installed in before sbatch: the job inherits it. Set the partition,
 # the account and the time limit of your cluster below (a line starting with ##SBATCH is ignored). The outputs go to
@@ -19,6 +22,11 @@
 ##SBATCH --account=ACCOUNT
 
 set -euo pipefail
+# one argument would fit a calibration under the default name and predict with the manifest's own
+if [ $# -ne 0 ] && [ $# -ne 2 ]; then
+  echo "usage: sbatch servecast.sbatch [MANIFEST CALIBRATION]" >&2
+  exit 2
+fi
 manifest="${1:-example-a100.yaml}"
 calibration="${2:-my-a100}"
 
@@ -27,6 +35,6 @@ servecast doctor
 [ $# -gt 0 ] || [ -f "$manifest" ] || servecast manifest show example-a100 > "$manifest"
 servecast profile calibration -c "$manifest" --output-dir profiling
 servecast calibrate --data profiling --name "$calibration" --overwrite
-servecast predict -c "$manifest" --output-dir prediction
+servecast predict -c "$manifest" --with "$calibration" --output-dir prediction
 servecast profile serving -c "$manifest" --output-dir measurement
 servecast compare prediction measurement

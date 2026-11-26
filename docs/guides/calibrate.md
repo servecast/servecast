@@ -56,11 +56,12 @@ so it can run on another computer.
 ## 3. Predict
 
 ```bash
-servecast predict -c example-a100.yaml --output-dir prediction
+servecast predict -c example-a100.yaml --with my-a100 --output-dir prediction
 ```
 
-This is the Get started prediction, now made with your GPU's calibration at the clock it was measured at. It prints the
-prediction and saves it in `prediction/`.
+This is the Get started prediction, now made with your GPU's calibration at the clock it was measured at. `--with`
+names the calibration step 2 saved, which is also the one the manifest uses. It prints the prediction and saves it in
+`prediction/`.
 
 ## 4. Measure the serving
 

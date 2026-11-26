@@ -20,7 +20,7 @@ def _read_any(path: Path) -> tuple[list[int], list[int], str]:
         typer.echo(f"servecast workload describe: {path}: no such file (shipped traces: "
                    f"{', '.join(pools.SHIPPED_TRACES)})", err=True)
         raise typer.Exit(2)
-    first = path.read_text(encoding="utf-8").lstrip()[:2000]
+    first = path.read_bytes()[:4000].decode("utf-8", errors="replace").lstrip()[:2000]  # the reader names bad bytes
     fmt = "mooncake" if '"input_length"' in first else "lengths"
     try:
         p, g, warnings = pools.read_trace(path, fmt)
@@ -81,13 +81,20 @@ def sample(config: Path, sets: list[str], out: Path, output_format: str) -> None
         raise typer.Exit(2) from error
     for w in warnings:
         typer.echo(f"warning: {w}", err=True)
-    sha = pools.write(out, p, g, header)
+    try:
+        sha = pools.write(out, p, g, header)
+    except OSError as error:  # an internal error (FileNotFoundError) used to say "please report it"
+        typer.echo(f"servecast workload sample: --out: cannot write {out}: {error.strerror}", err=True)
+        raise typer.Exit(3) from None
     if output_format == "json":
         typer.echo(json.dumps({"pool": str(out), "requests": len(p), "sha256": sha, **header}, indent=1))
         return
     typer.echo(f"wrote {out}: {len(p)} requests, sha256 {sha}")
     if header.get("source") == "synthetic":
+        source = m.traffic.source
         for side in ("input", "output"):
             req, real = header["requested"][side], header["realized"][side]
-            typer.echo(f"{side:7} requested mean {req['mean']:.1f} variance {req['variance']:.1f}   "
+            given = getattr(getattr(source, f"{side}_tokens", None), "variance", None) is not None
+            variance = f"variance {req['variance']:.1f}" + ("" if given else " (the sampler's default)")
+            typer.echo(f"{side:7} requested mean {req['mean']:.1f} {variance}   "
                        f"realized mean {real['mean']:.1f} variance {real['variance']:.1f}")

@@ -36,8 +36,38 @@ def shipped_trace(name: str) -> dict[str, Any]:
     return doc
 
 
+def _length(value: Any) -> int:
+    """A token count as a trace writes it: an integer, or a whole number written as one (512.0, "512"); a fraction, a
+    boolean or a value too large to be finite is refused (2.5 used to be read as 2, true as 1, 1e400 crashed)."""
+    if isinstance(value, bool):
+        raise ValueError("a boolean")
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    if isinstance(value, str) and value.strip().isdigit():
+        return int(value.strip())
+    raise ValueError(f"{value!r}")
+
+
+def _json_line(path: Path, n: int, line: str) -> Any:
+    try:
+        return json.loads(line)
+    except ValueError as error:  # the file and the line, which json leaves out
+        hint = "; a CSV trace needs format: lengths" if path.suffix.lower() == ".csv" else ""
+        raise ValueError(f"{path}:{n}: not a JSON line ({error.args[0].split(':')[0]}){hint}") from None
+
+
 def read_trace(path: Path, fmt: str) -> tuple[list[int], list[int], list[str]]:
-    """(input lengths, output lengths, warnings) of a trace file, every request in file order."""
+    """(input lengths, output lengths, warnings) of a trace file, every request in file order. ValueError names the
+    file and the line of anything that is not one."""
+    try:
+        return _read_trace(path, fmt)
+    except UnicodeDecodeError:
+        raise ValueError(f"{path}: not UTF-8 text; a trace is JSON lines or CSV") from None
+
+
+def _read_trace(path: Path, fmt: str) -> tuple[list[int], list[int], list[str]]:
     p: list[int] = []
     g: list[int] = []
     warnings: list[str] = []
@@ -48,10 +78,10 @@ def read_trace(path: Path, fmt: str) -> tuple[list[int], list[int], list[str]]:
             for n, line in enumerate(handle, 1):
                 if not line.strip():
                     continue
-                row = json.loads(line)
+                row = _json_line(path, n, line)
                 try:
-                    p.append(int(row["input_length"]))
-                    g.append(int(row["output_length"]))
+                    p.append(_length(row["input_length"]))
+                    g.append(_length(row["output_length"]))
                 except (KeyError, TypeError, ValueError) as exc:
                     raise ValueError(f"{path}:{n}: needs integer input_length and output_length") from exc
                 for h in row.get("hash_ids") or ():
@@ -65,8 +95,8 @@ def read_trace(path: Path, fmt: str) -> tuple[list[int], list[int], list[str]]:
             with path.open(encoding="utf-8", newline="") as handle:
                 for n, row in enumerate(csv.DictReader(handle), 2):
                     try:
-                        p.append(int(row["input_tokens"]))
-                        g.append(int(row["output_tokens"]))
+                        p.append(_length(row["input_tokens"]))
+                        g.append(_length(row["output_tokens"]))
                     except (KeyError, TypeError, ValueError) as exc:
                         raise ValueError(f"{path}:{n}: needs integer input_tokens and output_tokens") from exc
         else:
@@ -74,10 +104,10 @@ def read_trace(path: Path, fmt: str) -> tuple[list[int], list[int], list[str]]:
                 for n, line in enumerate(handle, 1):
                     if not line.strip():
                         continue
-                    row = json.loads(line)
+                    row = _json_line(path, n, line)
                     try:
-                        p.append(int(row["input_tokens"]))
-                        g.append(int(row["output_tokens"]))
+                        p.append(_length(row["input_tokens"]))
+                        g.append(_length(row["output_tokens"]))
                     except (KeyError, TypeError, ValueError) as exc:
                         raise ValueError(f"{path}:{n}: needs integer input_tokens and output_tokens") from exc
     else:

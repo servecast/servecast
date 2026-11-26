@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import importlib.metadata as md
 import json
+import os
 import platform
 import sys
+from pathlib import Path
 from typing import Any
 
 import typer
@@ -53,7 +55,30 @@ def serving_blocked(gpu_problem: str | None, vllm: str | None) -> str | None:
     return None
 
 
+def shown(text: str) -> str:
+    """A path, or a message naming one, as doctor prints it: the home folder as ~, so that a report pasted into an
+    issue does not carry the user's name."""
+    home = str(Path.home())
+    return text.replace(home + os.sep, "~" + os.sep) if home not in ("", os.sep) else text
+
+
+def registry_problems() -> list[str]:
+    """Your gpus.json and models.json, when ServeCast cannot read them: every command that needs them refuses."""
+    from servecast.core import gpus
+    from servecast.model import geometry
+
+    found = []
+    for read in (gpus.registry, geometry.known):
+        try:
+            read()
+        except ValueError as error:
+            found.append(shown(str(error)))
+    return found
+
+
 def main(output_format: str) -> None:
+    from servecast.core.paths import cache_dir, data_dir
+
     reference = (platform.system() == "Darwin" and platform.machine() == "arm64" and sys.version_info[:2] == (3, 12)
                  and _version("numpy") == "2.5.0" and _version("scipy") == "1.18.0")
     device, problem = gpu()
@@ -65,7 +90,9 @@ def main(output_format: str) -> None:
         "scipy": _version("scipy"), "reference_environment": reference, "gpu": device, "vllm": vllm,
         "torch": _version("torch"),
         "profile": {"serving": {"ready": blocked is None, "why_not": blocked},
-                    "calibration": {"ready": blocked is None, "why_not": blocked}}}
+                    "calibration": {"ready": blocked is None, "why_not": blocked}},
+        # what error messages refer to: where your calibrations, gpus.json and models.json live, and the cache
+        "data_dir": shown(str(data_dir())), "cache_dir": shown(str(cache_dir())), "problems": registry_problems()}
     if output_format == "json":
         typer.echo(json.dumps(doc, indent=1))
         return
@@ -82,3 +109,6 @@ def main(output_format: str) -> None:
     typer.echo(f"profile serving: {'ready' if blocked is None else 'cannot run here: ' + blocked}")
     typer.echo(f"profile calibration: {'ready' if blocked is None else 'cannot run here: ' + blocked}")
     typer.echo("every other command runs on this computer")
+    typer.echo(f"your files: data directory {doc['data_dir']}, cache {doc['cache_dir']}")
+    for found in doc["problems"]:
+        typer.echo(f"problem: {found}")

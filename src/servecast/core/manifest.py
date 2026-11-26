@@ -211,7 +211,8 @@ class SyntheticSource(Strict):
 
 class Load(Strict):
     type: Literal["concurrency"] = Field(description="A closed workload: a fixed number of clients.")
-    concurrency: int = Field(ge=1, description="N, the number of clients.")
+    # an upper bound: 10 million clients hung past --timeout and grew past 3 GB; no GPU serves more than this many
+    concurrency: int = Field(ge=1, le=100_000, description="N, the number of clients (at most 100,000).")
     think_time_ms: float = Field(gt=0, description="Mean think time between a response and the client's next "
                                                    "request, in milliseconds; exponential.")
 
@@ -648,6 +649,17 @@ def shipped() -> dict[str, Path]:
 def find(path: Path) -> Path:
     """A manifest file, or the name of a manifest that ships with ServeCast."""
     return path if path.is_file() else shipped().get(str(path), path)
+
+
+def config_problem(path: Path) -> str | None:
+    """Why `-c` cannot read `path` as a manifest, or None. A file that holds no mapping says so when it is read."""
+    if str(path) == "-":
+        return "-: a manifest is read from a file, not from standard input; save it and give its path"
+    if path.is_dir():
+        return f"{path}: a directory; -c takes a manifest file"
+    if not path.exists():
+        return f"{path}: no such file, and no manifest of that name ships with ServeCast ({', '.join(shipped())})"
+    return None
 
 
 def load(path: Path) -> Any:

@@ -31,9 +31,9 @@ def fail(status: int, message: str, command: str = "predict") -> NoReturn:
 
 def load_manifest(path: Path, sets: list[str], extra_sets: list[str], command: str = "predict") -> mf.Manifest:
     path = mf.find(path)
-    if not path.is_file():
-        fail(2, f"{path}: no such file, and no manifest of that name ships with ServeCast "
-                f"({', '.join(mf.shipped())})", command)
+    unreadable = mf.config_problem(path)  # a directory or standard input used to be "no such file"
+    if unreadable:
+        fail(2, unreadable, command)
     try:
         raw = mf.load(path)
     except yaml.YAMLError as error:

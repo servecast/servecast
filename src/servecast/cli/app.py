@@ -515,7 +515,11 @@ def manifest_init(
     if out is None:
         typer.echo(text, nl=False)
     else:
-        out.write_text(text, encoding="utf-8")
+        try:
+            out.write_text(text, encoding="utf-8")
+        except OSError as error:  # an internal error (FileNotFoundError) used to say "please report it"
+            typer.echo(f"servecast manifest init: --out: cannot write {out}: {error.strerror}", err=True)
+            raise typer.Exit(3) from None
         typer.echo(f"wrote {out}", err=True)
 
 
@@ -570,8 +574,9 @@ def manifest_validate(config: Config, set_: Sets = None, output_format: OutputFo
     from servecast.core import manifest
 
     config = manifest.find(config)
-    if not config.is_file():
-        typer.echo(f"{config}: no such file, and no manifest of that name ships with ServeCast", err=True)
+    unreadable = manifest.config_problem(config)  # a directory or standard input used to be "no such file"
+    if unreadable:
+        typer.echo(unreadable, err=True)
         raise typer.Exit(2)
     try:
         raw = manifest.load(config)
@@ -649,9 +654,14 @@ def list_gpus(output_format: OutputFormat = Format.table) -> None:
         calibration = P.load_calibration(name)
         laws.setdefault(calibration["conditions"]["gpu"], set()).add(calibration["law"]["cost_law"])
     order = list(versions.entries("cost_law"))
+    try:
+        registry = gpus.registry()
+    except ValueError as error:  # your gpus.json: an internal error used to say "please report it"
+        typer.echo(f"servecast list gpus: {error}", err=True)
+        raise typer.Exit(2) from None
     rows = [{"gpu": g.id, "device": g.device_name, "memory GiB": str(g.memory_gib), "SMs": str(g.n_sm),
              "shipped cost laws": ", ".join(sorted(laws.get(g.id, ()), key=order.index)) or "none"}
-            for g in gpus.registry().values()]
+            for g in registry.values()]
     _print_rows(rows, output_format)
 
 
@@ -742,9 +752,14 @@ def list_models(output_format: OutputFormat = Format.table) -> None:
     """
     from servecast.model import geometry
 
+    try:
+        known = geometry.known()
+    except ValueError as error:  # your models.json
+        typer.echo(f"servecast list models: {error}", err=True)
+        raise typer.Exit(2) from None
     rows = [{"llm": g.name, "layers": str(g.n_layers), "width": str(g.d_model), "query/KV heads":
              f"{g.n_heads}/{g.h_kv}", "vocabulary": str(g.vocab), "context": str(g.max_context)}
-            for g in geometry.known().values()]
+            for g in known.values()]
     _print_rows(rows, output_format)
 
 
@@ -797,6 +812,6 @@ def main() -> None:
     except Exception as error:
         if _DEBUG:
             raise
-        typer.echo(f"servecast: internal error: {type(error).__name__}: {error} (run again with --debug for the "
-                   "traceback, and please report it)", err=True)
+        typer.echo(f"servecast: internal error: {type(error).__name__}: {error} (for the traceback, run it again as "
+                   "`servecast --debug <command> ...`, and please report it)", err=True)
         sys.exit(1)

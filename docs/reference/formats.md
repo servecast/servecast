@@ -88,7 +88,7 @@ You write it; every command reads it.
 | field | type | required | default | meaning |
 |---|---|---|---|---|
 | `type` | `concurrency` | yes |  | A closed workload: a fixed number of clients. |
-| `concurrency` | integer | yes |  | N, the number of clients. |
+| `concurrency` | integer | yes |  | N, the number of clients (at most 100,000). |
 | `think_time_ms` | number | yes |  | Mean think time between a response and the client's next request, in milliseconds; exponential. |
 
 ### manifest: Parallelism

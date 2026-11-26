@@ -116,8 +116,9 @@ def resolve_llm(model: str | None, *, offline: bool = False) -> geometries.Geome
         # the refusals the measurement applies too: what the cost laws do not model
         deployments.architecture_from_config(config)
         return geometries.from_config(name, config)
-    except ValueError as error:
-        raise ManifestError(f"engine.model: {model}: {error}") from error
+    except ValueError as error:  # the hub's messages name the id already
+        said = str(error)
+        raise ManifestError(f"engine.model: {said if model in said else f'{model}: {said}'}") from error
 
 
 def architecture(llm: geometries.Geometry) -> dict[str, int]:
@@ -248,7 +249,13 @@ def workload_law(p: Sequence[int], g: Sequence[int], fitter_id: str, phase_cap: 
         if progress is not None:  # an altered law was read back as it was, and changed the prediction
             progress(f"the cached workload law {path.name} does not match its checksum; fitting it again")
     if progress is not None:
-        progress(f"fitting the workload law to {len(p)} requests (cached afterwards)")
+        def is_shipped(name: str) -> bool:
+            doc = pools.shipped_trace(name)
+            return pools.digest(doc["input_tokens"], doc["output_tokens"]) == digest
+
+        shipped = next((n for n in pools.SHIPPED_TRACES if is_shipped(n)), None) if block_size != 16 else None
+        why = f"; the shipped law of {shipped} is for 16-token blocks, not {block_size}" if shipped else ""
+        progress(f"fitting the workload law to {len(p)} requests (cached afterwards){why}")
     try:
         law, kept = _fit(fitter_id, p, g, block_size, phase_cap, seconds)
     except ValueError as error:  # some small pools fit no prompt-class count: an input to change, not a crash
@@ -409,7 +416,7 @@ def fitted_on_llm(calibration: Mapping[str, Any], llm: geometries.Geometry) -> b
     fitted_on = calibration["conditions"]["fitted_on"]
     if isinstance(fitted_on, str):
         return _calibrated_on(fitted_on, llm)
-    return any(architecture(geometries.resolve(str(name))) == architecture(llm) for name in fitted_on)
+    return any(_same_llm(architecture(geometries.resolve(str(name))), architecture(llm)) for name in fitted_on)
 
 
 def check_transfer(m: Manifest, calibration: Mapping[str, Any], llm: geometries.Geometry) -> None:
@@ -428,8 +435,14 @@ def _calibrated_on(name: str | None, llm: geometries.Geometry) -> bool:
     a local copy computes the same), or the same name for an LLM ServeCast does not know offline."""
     llms = geometries.known()
     if name in llms:
-        return architecture(llms[name]) == architecture(llm)
+        return _same_llm(architecture(llms[name]), architecture(llm))
     return name == llm.name
+
+
+def _same_llm(a: Mapping[str, int], b: Mapping[str, int]) -> bool:
+    """The same LLM, whatever context length its copy declares: a local copy with another max_position_embeddings
+    was a transfer, marked outside the calibration's validity."""
+    return {k: v for k, v in a.items() if k != "max_context"} == {k: v for k, v in b.items() if k != "max_context"}
 
 
 def _point(args: tuple[Plan, int, float, float | None, bool]) -> dict[str, Any]:

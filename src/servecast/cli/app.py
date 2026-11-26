@@ -107,7 +107,8 @@ Sets = Annotated[list[str] | None, typer.Option(
          "whole manifest is validated.")]
 Sweep = Annotated[list[str] | None, typer.Option(
     "--sweep", metavar="PATH=V1,V2,...", rich_help_panel="Workload",
-    help="Repeat for each value of ONE field, e.g. traffic.load.concurrency=40,80,120.")]
+    help="Repeat for each value of ONE field, traffic.load.concurrency or traffic.load.think_time_ms, e.g. "
+         "traffic.load.concurrency=40,80,120; each value once.")]
 OutputFormat = Annotated[Format, typer.Option("--format", rich_help_panel="Output",
                                               help="How the summary is printed. Files on disk do not change.")]
 Overwrite = Annotated[bool, typer.Option("--overwrite", rich_help_panel="Output",
@@ -164,7 +165,8 @@ def predict(
     config: Config,
     with_: Annotated[str | None, typer.Option(
         "--with", metavar="CALIBRATION", rich_help_panel="Inputs",
-        help="A calibration name or path. Same as --set calibration.use=CALIBRATION.")] = None,
+        help="A calibration name, a calibration.json, or the folder calibrate writes. Same as --set "
+             "calibration.use=CALIBRATION.")] = None,
     to: Annotated[str | None, typer.Option(
         "--to", metavar="LLM", rich_help_panel="Inputs",
         help="The LLM to predict with the calibration, a transfer: a Hugging Face id or a local directory holding "

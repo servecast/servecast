@@ -570,8 +570,8 @@ Generated from `servecast --help` by `python tools/gen_cli_reference.py`; do not
 │ *  --config  -c      MANIFEST     The manifest: a YAML file, or the name of one that ships with  │
 │                                   ServeCast (servecast list manifests).                          │
 │                                   [required]                                                     │
-│    --with            CALIBRATION  A calibration name or path. Same as --set                      │
-│                                   calibration.use=CALIBRATION.                                   │
+│    --with            CALIBRATION  A calibration name, a calibration.json, or the folder          │
+│                                   calibrate writes. Same as --set calibration.use=CALIBRATION.   │
 │    --to              LLM          The LLM to predict with the calibration, a transfer: a Hugging │
 │                                   Face id or a local directory holding config.json. Same as      │
 │                                   --set engine.model=LLM --set calibration.transfer=true.        │
@@ -580,8 +580,9 @@ Generated from `servecast --help` by `python tools/gen_cli_reference.py`; do not
 │                                   validated.                                                     │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Workload ───────────────────────────────────────────────────────────────────────────────────────╮
-│ --sweep        PATH=V1,V2,...  Repeat for each value of ONE field, e.g.                          │
-│                                traffic.load.concurrency=40,80,120.                               │
+│ --sweep        PATH=V1,V2,...  Repeat for each value of ONE field, traffic.load.concurrency or   │
+│                                traffic.load.think_time_ms, e.g.                                  │
+│                                traffic.load.concurrency=40,80,120; each value once.              │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
 │ --output-dir                 DIR           Where the results go. A non-empty directory is        │
@@ -713,8 +714,9 @@ Generated from `servecast --help` by `python tools/gen_cli_reference.py`; do not
 │                                  validated.                                                      │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Workload ───────────────────────────────────────────────────────────────────────────────────────╮
-│ --sweep        PATH=V1,V2,...  Repeat for each value of ONE field, e.g.                          │
-│                                traffic.load.concurrency=40,80,120.                               │
+│ --sweep        PATH=V1,V2,...  Repeat for each value of ONE field, traffic.load.concurrency or   │
+│                                traffic.load.think_time_ms, e.g.                                  │
+│                                traffic.load.concurrency=40,80,120; each value once.              │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
 │ --output-dir        DIR           Where the results go. A non-empty directory is refused without │

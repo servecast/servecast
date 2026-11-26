@@ -81,7 +81,9 @@ class Capacity(Strict):
 class KvCache(Strict):
     block_size: int | None = Field(None, ge=1, description="Tokens per KV-cache block, a multiple of 16: vLLM 0.25.1's "
                                                            "FlashAttention backend takes no other. Unset: 16, vLLM "
-                                                           "0.25.1's default on these GPUs.")
+                                                           "0.25.1's default on these GPUs. The shipped traces' "
+                                                           "workload laws are for 16; another size fits one, in "
+                                                           "minutes, the first time.")
     prefix_caching: bool | None = Field(
         None, description="vLLM's prefix caching. ServeCast computes every prompt in full, so true is refused, and "
         "profile serving runs vLLM with it off (its prompts all start with the same tokens). Unset: off.")
@@ -152,7 +154,8 @@ class Engine(Strict):
 # calibration and versions ----------------------------------------------------------------------------------
 
 class Calibration(Strict):
-    use: str | None = Field(None, description="A calibration name or path. `--with` sets it.")
+    use: str | None = Field(None, description="A calibration name, a calibration.json, or the folder calibrate "
+                                              "writes. `--with` sets it.")
     data: Path | None = Field(None, description="A profiling-data directory to fit a calibration from.")
     transfer: bool = Field(False, description="Predict an LLM other than the one the calibration was fitted on: a "
                                               "transfer. A per-GPU calibration is fitted on synthetic models, so "

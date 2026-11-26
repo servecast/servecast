@@ -59,9 +59,10 @@ def fetch_config(repo_id: str, revision: str = "main", *, offline: bool = False)
             body = response.read()
     except urllib.error.HTTPError as error:
         if error.code in (401, 403):
-            raise ValueError(f"{repo_id}: the hub refused config.json ({error.code}); a gated model needs HF_TOKEN set "
-                             "to a token that has accepted its licence, or a local directory holding config.json") \
-                from error
+            # the hub answers 401 for a repository that does not exist too, so that its name says nothing
+            raise ValueError(f"{repo_id}: the hub refused config.json ({error.code}): no such repository, or a gated "
+                             "one, which needs HF_TOKEN set to a token that has accepted its licence; or give a local "
+                             "directory holding config.json") from error
         if error.code == 404:
             raise ValueError(f"{repo_id}: no such repository, or no config.json in it") from error
         raise ValueError(f"{repo_id}: the hub answered {error.code}") from error

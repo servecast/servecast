@@ -37,6 +37,11 @@ calibrations were fitted with; an LLM you add is read as its `config.json` would
 | data directory | the calibrations you fitted, under their names (`calibrations/<name>.json`), `gpus.json` and `models.json` for GPUs and LLMs you add | `~/Library/Application Support/servecast` on macOS, `~/.local/share/servecast` on Linux, or `SERVECAST_DATA_DIR` |
 | cache | workload laws fitted to new request pools (each with a checksum, fitted again if it does not match), and downloaded `config.json` files | `~/Library/Caches/servecast` on macOS, `~/.cache/servecast` on Linux, or `SERVECAST_CACHE_DIR` |
 
+A relative path in a manifest, such as a trace, profiling data or a calibration file, is read from the directory you
+run ServeCast in, not from the manifest's own directory. The `manifest.yaml` a prediction writes keeps the paths as the
+manifest gave them, so run it again from the same directory, or give absolute paths. `servecast doctor` names the data
+directory and the cache.
+
 ## What each command writes
 
 | command | folder (`--output-dir`) | files |

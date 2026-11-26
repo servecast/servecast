@@ -133,7 +133,7 @@
       ]
     },
     "c3ad4006": {
-      "summary": "The paper's stopping rule, plus the 95th percentiles of TTFT and TPOT as judged metrics when the manifest sets a target for them.",
+      "summary": "The paper's stopping rule, plus the 95th percentiles of TTFT and TPOT as judged metrics, with targets of 0.10 unless the manifest sets others.",
       "released": "2026-11",
       "in_paper": false,
       "default": true,

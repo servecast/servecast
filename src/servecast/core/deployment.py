@@ -342,7 +342,9 @@ def build_pool(m: Manifest, components: Mapping[str, str | None], context: int) 
             if want and abs(got / want - 1) > SYNTHETIC_TOLERANCE:
                 off = 100 * (got / want - 1)
                 warnings.append(f"the synthetic {side} lengths drawn have {stat} {got:.1f}, {off:+.0f} % from the "
-                                f"{want:g} asked for: a pair longer than the context ({context} tokens) is drawn again")
+                                f"{want:g} asked for: {m.traffic.pool_size} draws are a sample (a larger "
+                                f"traffic.pool_size comes closer), and a pair longer than the context ({context} "
+                                "tokens) is drawn again")
     return Pool(drawn["input_tokens"], drawn["output_tokens"], header, warnings, spec_out)
 
 

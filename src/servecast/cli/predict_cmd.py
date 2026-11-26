@@ -74,7 +74,8 @@ def find_calibration(name: str) -> tuple[dict[str, Any], str, bytes]:
 
     shipped = P.shipped_calibrations()
     user = data_dir() / "calibrations" / f"{name}.json"
-    for path in (shipped.get(name), user if user.is_file() else None, Path(name)):
+    folder = Path(name) / "calibration.json"  # the folder calibrate writes, as --data takes a folder too
+    for path in (shipped.get(name), user if user.is_file() else None, Path(name), folder):
         if path is not None and Path(path).is_file():
             body = Path(path).read_bytes()
             try:
@@ -129,9 +130,14 @@ def parse_sweep(texts: list[str] | None, command: str = "predict") -> tuple[str,
                 "sweep the other field in a second run, or fix it with --set", command)
     text = texts[0]
     field, sep, values = text.partition("=")
-    items = [v.strip() for v in values.split(",") if v.strip()]
-    if not sep or not field or not items:
+    items = [v.strip() for v in values.split(",")]
+    if not sep or not field or not any(items):
         fail(2, f"--sweep: expected PATH=V1,V2,..., got {text!r}", command)
+    if "" in items:  # 4,,8 ran two points without a word
+        fail(2, f"--sweep: {text!r} has an empty value", command)
+    repeated = sorted({v for v in items if items.count(v) > 1})
+    if repeated:  # 4,4 computed the same point twice
+        fail(2, f"--sweep: {', '.join(repeated)} given more than once", command)
     return field, items
 
 

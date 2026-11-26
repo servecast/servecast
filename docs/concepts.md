@@ -81,7 +81,7 @@ of a growing schedule the estimator removes the warm-up with the MSER-5 rule (at
 the window of the remaining completions, and computes a 95 % confidence interval for each metric from 32 batch means.
 The run stops when every interval's half-width is below its target, relative to the mean, and Little's law holds on
 the window within 1 %. The targets are in the manifest (`traffic.stop.steady_state`). With the estimator `c3ad4006`
-(released 2026-11) the 95th percentiles of TTFT and TPOT can be targets too.
+(released 2026-11) the 95th percentiles of TTFT and TPOT are targets too, 0.10 each unless the manifest sets others.
 
 ## Components and versions
 

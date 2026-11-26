@@ -224,7 +224,9 @@ def _run_flags(pred: Mapping[str, Any], meas: Mapping[str, Any], directories: Se
                      "architecture)")
     version = meas["provenance"].get("vllm_version")
     predicted_for = _get(pred["resolved_manifest"], "engine.backend_version") or deployment.VLLM_VERSION
-    if version != predicted_for:
+    if version is None:  # it printed "measured on vLLM None"
+        flags.append(f"the measurement does not record its vLLM version; the prediction is for vLLM {predicted_for}")
+    elif version != predicted_for:
         flags.append(f"measured on vLLM {version}; the prediction is for vLLM {predicted_for}")
     elif version != deployment.VLLM_VERSION:
         flags.append(f"both sides are for vLLM {version}; ServeCast models vLLM {deployment.VLLM_VERSION}")

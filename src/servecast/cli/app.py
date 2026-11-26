@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import json
 import sys
+from collections.abc import Callable, Iterable
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 import yaml
@@ -38,16 +39,78 @@ def _examples(*lines: str, see_also: str) -> str:
     return f"**Examples**\n\n```\n{block}\n```\n\nSee also: {see_also}."
 
 
-def _print_rows(rows: list[dict[str, str]], output_format: Format) -> None:
-    """A list command's output: aligned columns for people, JSON for scripts."""
+#: a column of a list command's table: its header, and the cell it shows for one record
+Column = tuple[str, Callable[[dict[str, Any]], str]]
+
+
+def _field(key: str) -> Callable[[dict[str, Any]], str]:
+    return lambda record: str(record[key])
+
+
+def _cells(*keys: str) -> list[Column]:
+    """Columns that show a record's field as it is, under the field's name."""
+    return [(key, _field(key)) for key in keys]
+
+
+def _yes(value: bool) -> str:
+    return "yes" if value else "no"
+
+
+# TAB completion of a name. When no name starts with what was typed, the shell completes a path instead, which these
+# options also take.
+
+def _starting(incomplete: str, names: Iterable[str]) -> list[str]:
+    return [name for name in names if name.startswith(incomplete)]
+
+
+def _complete_calibrations(incomplete: str) -> list[str]:
+    """The calibrations `servecast list calibrations` shows, shipped and yours."""
+    from servecast.core.paths import data_dir
+    from servecast.model import predict as P
+
+    names = list(P.shipped_calibrations())
+    root = data_dir() / "calibrations"
+    if root.is_dir():
+        names += [p.relative_to(root).with_suffix("").as_posix() for p in sorted(root.rglob("*.json"))]
+    return _starting(incomplete, names)
+
+
+def _complete_llms(incomplete: str) -> list[str]:
+    """The LLMs `servecast list models` shows."""
+    from servecast.model import geometry
+
+    try:
+        return _starting(incomplete, geometry.known())
+    except ValueError:  # your models.json cannot be read: `list models` says why
+        return []
+
+
+def _complete_paper_calibrations(incomplete: str) -> list[str]:
+    from servecast.core import versions
+    from servecast.model import predict as P
+
+    law = versions.PAPER["cost_law"]
+    return _starting(incomplete, (n for n in P.shipped_calibrations() if n.split("/")[1:2] == [law]))
+
+
+def _complete_paper_llms(incomplete: str) -> list[str]:
+    from servecast.paper import data
+
+    return _starting(incomplete, (data.slug(llm) for llm in data.LLMS))
+
+
+def _print_rows(records: list[dict[str, Any]], output_format: Format, columns: list[Column]) -> None:
+    """A list command's output: aligned columns for people; for scripts, the records as JSON, with identifier keys
+    and typed values (numbers, booleans, lists, null), which the columns format for reading."""
     if output_format is Format.json:
-        typer.echo(json.dumps(rows, indent=2))
+        typer.echo(json.dumps(records, indent=1))
         return
-    headers = list(rows[0])
-    widths = [max(len(h), *(len(r[h]) for r in rows)) for h in headers]
+    headers = [header for header, _ in columns]
+    rows = [[cell(record) for _, cell in columns] for record in records]
+    widths = [max([len(h), *(len(row[i]) for row in rows)]) for i, h in enumerate(headers)]
     typer.echo("  ".join(h.ljust(w) for h, w in zip(headers, widths, strict=True)).rstrip())
     for row in rows:
-        typer.echo("  ".join(row[h].ljust(w) for h, w in zip(headers, widths, strict=True)).rstrip())
+        typer.echo("  ".join(c.ljust(w) for c, w in zip(row, widths, strict=True)).rstrip())
 
 
 class Format(StrEnum):
@@ -164,11 +227,11 @@ def _root(
 def predict(
     config: Config,
     with_: Annotated[str | None, typer.Option(
-        "--with", metavar="CALIBRATION", rich_help_panel="Inputs",
+        "--with", metavar="CALIBRATION", rich_help_panel="Inputs", autocompletion=_complete_calibrations,
         help="A calibration name, a calibration.json, or the folder calibrate writes. Same as --set "
              "calibration.use=CALIBRATION.")] = None,
     to: Annotated[str | None, typer.Option(
-        "--to", metavar="LLM", rich_help_panel="Inputs",
+        "--to", metavar="LLM", rich_help_panel="Inputs", autocompletion=_complete_llms,
         help="The LLM to predict with the calibration, a transfer: a Hugging Face id or a local directory holding "
              "config.json. Same as --set engine.model=LLM --set calibration.transfer=true.")] = None,
     set_: Sets = None,
@@ -372,8 +435,10 @@ def replicate_fetch(output_format: OutputFormat = Format.table) -> None:
     see_also="`servecast replicate run`, `servecast list calibrations`"))
 def replicate_predict(
     with_: Annotated[str, typer.Option("--with", metavar="CALIBRATION", rich_help_panel="Inputs",
+                                       autocompletion=_complete_paper_calibrations,
                                        help="One of the paper's calibrations: GPU/d9cbf1d3/LLM.")],
     to: Annotated[str, typer.Option("--to", metavar="LLM", rich_help_panel="Inputs",
+                                    autocompletion=_complete_paper_llms,
                                     help="One of the paper's LLMs, on the same GPU.")],
     trace: Annotated[Trace, typer.Option("--trace", rich_help_panel="Workload", help="One of the paper's traces.")],
     clients: Annotated[int, typer.Option("--clients", metavar="N", rich_help_panel="Workload",
@@ -399,7 +464,8 @@ def replicate_predict(
 def replicate_run(
     experiment: Annotated[Experiment, typer.Argument(help="Which experiment.")],
     gpu: Annotated[str | None, typer.Option("--gpu", rich_help_panel="Inputs",
-                                            help="Restrict rq1 or rq2 to one of the paper's GPUs.")] = None,
+                                            help="Restrict rq1 or rq2, or rq3 when it fits its calibrations "
+                                                 "again, to one of the paper's GPUs.")] = None,
     from_frozen: Annotated[bool, typer.Option(
         "--from-frozen", rich_help_panel="Inputs",
         help="Print the tables from the shipped predictions, or as published, in seconds, instead of recomputing.")
@@ -608,7 +674,7 @@ def manifest_validate(config: Config, set_: Sets = None, output_format: OutputFo
         problems += _what_predict_refuses(checked)
     if output_format is Format.json:
         typer.echo(json.dumps({"file": str(config), "valid": not problems,
-                               "problems": [{"path": p.path, "message": p.message} for p in problems]}, indent=2))
+                               "problems": [{"path": p.path, "message": p.message} for p in problems]}, indent=1))
     else:
         for problem in problems:
             typer.echo(f"{config}: {problem}", err=True)
@@ -645,7 +711,7 @@ def manifest_schema(
     """
     from servecast.core.formats import SCHEMAS
 
-    typer.echo(json.dumps(SCHEMAS[kind.value].model_json_schema(by_alias=True), indent=2))
+    typer.echo(json.dumps(SCHEMAS[kind.value].model_json_schema(by_alias=True), indent=1))
 
 
 # list ----------------------------------------------------------------------------------------------------
@@ -674,10 +740,11 @@ def list_gpus(output_format: OutputFormat = Format.table) -> None:
     except ValueError as error:  # your gpus.json: an internal error used to say "please report it"
         typer.echo(f"servecast list gpus: {error}", err=True)
         raise typer.Exit(2) from None
-    rows = [{"gpu": g.id, "device": g.device_name, "memory GiB": str(g.memory_gib), "SMs": str(g.n_sm),
-             "shipped cost laws": ", ".join(sorted(laws.get(g.id, ()), key=order.index)) or "none"}
-            for g in registry.values()]
-    _print_rows(rows, output_format)
+    records = [{"gpu": g.id, "device": g.device_name, "memory_gib": g.memory_gib, "sms": g.n_sm,
+                "shipped_cost_laws": sorted(laws.get(g.id, ()), key=order.index)} for g in registry.values()]
+    _print_rows(records, output_format, [
+        *_cells("gpu", "device"), ("memory GiB", _field("memory_gib")), ("SMs", _field("sms")),
+        ("shipped cost laws", lambda r: ", ".join(r["shipped_cost_laws"]) or "none")])
 
 
 @list_app.command("laws", epilog=_examples("servecast list laws", see_also="`servecast list components`"))
@@ -686,10 +753,12 @@ def list_laws(output_format: OutputFormat = Format.table) -> None:
     from servecast.core import versions
 
     per = {"llm_and_gpu": "per LLM and GPU", "gpu": "per GPU"}
-    rows = [{"law": name, "released": law.released, "calibration": per[law.calibrated_per],
-             "the paper's": "yes" if law.in_paper else "no", "summary": law.summary}
-            for name, law in ((name, versions.law(name)) for name in versions.entries("cost_law"))]
-    _print_rows(rows, output_format)
+    records = [{"law": name, "released": law.released, "calibrated_per": law.calibrated_per,
+                "in_paper": bool(law.in_paper), "summary": law.summary}
+               for name, law in ((name, versions.law(name)) for name in versions.entries("cost_law"))]
+    _print_rows(records, output_format, [
+        *_cells("law", "released"), ("calibration", lambda r: per[r["calibrated_per"]]),
+        ("the paper's", lambda r: _yes(r["in_paper"])), *_cells("summary")])
 
 
 @list_app.command("components", epilog=_examples("servecast list components",
@@ -701,11 +770,13 @@ def list_components(output_format: OutputFormat = Format.table) -> None:
     """
     from servecast.core import formats, versions
 
-    rows = [{"component": versions.COMPONENTS[key].name, "key in versions": key, "name": name,
-             "released": e.released, "the paper's": "yes" if e.in_paper else "no",
-             "default": "yes" if e.default else "no", "summary": e.summary}
-            for key in formats.COMPONENT_KINDS for name, e in versions.entries(key).items()]
-    _print_rows(rows, output_format)
+    records = [{"component": versions.COMPONENTS[key].name, "versions_key": key, "name": name,
+                "released": e.released, "in_paper": bool(e.in_paper), "default": bool(e.default), "summary": e.summary}
+               for key in formats.COMPONENT_KINDS for name, e in versions.entries(key).items()]
+    _print_rows(records, output_format, [
+        *_cells("component"), ("key in versions", _field("versions_key")), *_cells("name", "released"),
+        ("the paper's", lambda r: _yes(r["in_paper"])), ("default", lambda r: _yes(r["default"])),
+        *_cells("summary")])
 
 
 @list_app.command("calibrations", epilog=_examples("servecast list calibrations",
@@ -721,20 +792,29 @@ def list_calibrations(output_format: OutputFormat = Format.table) -> None:
     user_root = data_dir() / "calibrations"
     found += [(p.relative_to(user_root).with_suffix("").as_posix(), p, "yours")
               for p in sorted(user_root.rglob("*.json"))] if user_root.is_dir() else []
-    rows = []
+    records: list[dict[str, Any]] = []
     for name, path, origin in found:
         try:
             doc = calibrations.parse(json.loads(Path(path).read_text(encoding="utf-8")), path)
         except ValueError as error:
-            rows.append({"name": name, "gpu": "-", "cost law": "-", "calibrated on": f"unreadable: {error}",
-                         "origin": origin, "profiling data": "-"})
+            records.append({"name": name, "gpu": None, "cost_law": None, "fitted_on": None, "origin": origin,
+                            "profiling_data_shipped": False, "unreadable": str(error)})
             continue
         on = doc["conditions"]["fitted_on"]
-        rows.append({"name": name, "gpu": doc["conditions"]["gpu"], "cost law": doc["law"]["cost_law"],
-                     "calibrated on": on if isinstance(on, str) else f"{len(on or [])} synthetic models",
-                     "origin": origin, "profiling data": "shipped" if origin == "shipped" and name in profiled
-                     else "-"})
-    _print_rows(rows, output_format)
+        records.append({"name": name, "gpu": doc["conditions"]["gpu"], "cost_law": doc["law"]["cost_law"],
+                        "fitted_on": on if on is None or isinstance(on, str) else list(on), "origin": origin,
+                        "profiling_data_shipped": origin == "shipped" and name in profiled, "unreadable": None})
+
+    def calibrated_on(r: dict[str, Any]) -> str:
+        if r["unreadable"] is not None:
+            return f"unreadable: {r['unreadable']}"
+        on = r["fitted_on"]
+        return on if isinstance(on, str) else f"{len(on or [])} synthetic models"
+
+    _print_rows(records, output_format, [
+        *_cells("name"), ("gpu", lambda r: r["gpu"] or "-"), ("cost law", lambda r: r["cost_law"] or "-"),
+        ("calibrated on", calibrated_on), *_cells("origin"),
+        ("profiling data", lambda r: "shipped" if r["profiling_data_shipped"] else "-")])
 
 
 @list_app.command("manifests", epilog=_examples("servecast list manifests", see_also="`servecast manifest show`"))
@@ -746,17 +826,21 @@ def list_manifests(output_format: OutputFormat = Format.table) -> None:
     """
     from servecast.core import manifest
 
-    rows = []
+    records = []
     for name, path in manifest.shipped().items():
         m, _ = manifest.validate(manifest.load(path))
         assert m is not None and m.traffic is not None, name
         source = m.traffic.source
-        rows.append({"manifest": name, "llm": str(m.engine.model), "gpu": str(m.engine.hardware),
-                     "calibration": str(m.calibration.use),
-                     "workload": ", ".join(str(t) for t in getattr(source, "paths", None) or ["synthetic lengths"]),
-                     "load": "; ".join(f"{level.concurrency} clients, think {level.think_time_ms:g} ms"
-                                       for level in m.traffic.levels())})
-    _print_rows(rows, output_format)
+        records.append({"manifest": name, "llm": str(m.engine.model), "gpu": str(m.engine.hardware),
+                        "calibration": m.calibration.use, "source": source.type,
+                        "traces": [str(t) for t in getattr(source, "paths", None) or []],
+                        "load": [{"concurrency": level.concurrency, "think_time_ms": level.think_time_ms}
+                                 for level in m.traffic.levels()]})
+    _print_rows(records, output_format, [
+        *_cells("manifest", "llm", "gpu", "calibration"),
+        ("workload", lambda r: ", ".join(r["traces"]) or "synthetic lengths"),
+        ("load", lambda r: "; ".join(f"{x['concurrency']} clients, think {x['think_time_ms']:g} ms"
+                                     for x in r["load"]))])
 
 
 @list_app.command("models", epilog=_examples("servecast list models", see_also="`servecast predict --to`"))
@@ -772,10 +856,11 @@ def list_models(output_format: OutputFormat = Format.table) -> None:
     except ValueError as error:  # your models.json
         typer.echo(f"servecast list models: {error}", err=True)
         raise typer.Exit(2) from None
-    rows = [{"llm": g.name, "layers": str(g.n_layers), "width": str(g.d_model), "query/KV heads":
-             f"{g.n_heads}/{g.h_kv}", "vocabulary": str(g.vocab), "context": str(g.max_context)}
-            for g in known.values()]
-    _print_rows(rows, output_format)
+    records = [{"llm": g.name, "layers": g.n_layers, "width": g.d_model, "query_heads": g.n_heads,
+                "kv_heads": g.h_kv, "vocabulary": g.vocab, "context": g.max_context} for g in known.values()]
+    _print_rows(records, output_format, [
+        *_cells("llm", "layers", "width"), ("query/KV heads", lambda r: f"{r['query_heads']}/{r['kv_heads']}"),
+        *_cells("vocabulary", "context")])
 
 
 # completion and doctor -----------------------------------------------------------------------------------

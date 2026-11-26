@@ -20,7 +20,8 @@
 │ --help  -h      <bool>  Show this message and exit.                                              │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Inputs ─────────────────────────────────────────────────────────────────────────────────────────╮
-│ --gpu                <str>   Restrict rq1 or rq2 to one of the paper's GPUs.                     │
+│ --gpu                <str>   Restrict rq1 or rq2, or rq3 when it fits its calibrations again, to │
+│                              one of the paper's GPUs.                                            │
 │ --from-frozen        <bool>  Print the tables from the shipped predictions, or as published, in  │
 │                              seconds, instead of recomputing.                                    │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯

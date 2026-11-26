@@ -21,9 +21,9 @@ def test_list_components_shows_every_entry_by_name_with_its_summary() -> None:
     by_name = {row["name"]: row for row in rows}
     assert set(by_name) == {name for key in versions.KIND_OF if key != "calibration_procedure"
                             for name in versions.entries(key)}
-    assert by_name["d9cbf1d3"]["the paper's"] == "yes" and by_name["d9cbf1d3"]["default"] == "no"
-    assert by_name["fe3db391"]["the paper's"] == "no" and by_name["fe3db391"]["released"] == "2026-11"
-    assert all(row["summary"] == versions.entry(row["key in versions"], row["name"]).summary for row in rows)
+    assert by_name["d9cbf1d3"]["in_paper"] is True and by_name["d9cbf1d3"]["default"] is False
+    assert by_name["fe3db391"]["in_paper"] is False and by_name["fe3db391"]["released"] == "2026-11"
+    assert all(row["summary"] == versions.entry(row["versions_key"], row["name"]).summary for row in rows)
 
 
 def test_list_components_prints_aligned_columns() -> None:

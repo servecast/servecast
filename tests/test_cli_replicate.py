@@ -19,8 +19,8 @@ RUN = CliRunner()
 def test_list_names_the_five_experiments() -> None:
     rows = json.loads(RUN.invoke(app, ["replicate", "list", "--format", "json"]).output)
     assert [r["experiment"] for r in rows] == ["rq1", "rq2", "rq3", "ablation", "appendix"]
-    assert rows[1]["tables"] == ("rq2-matrix-ttft (Table 4), rq2-matrix-throughput (Table 13), "
-                                 "rq2-matrix-tpot (Table 14)")
+    assert rows[1]["tables"] == [{"name": "rq2-matrix-ttft", "number": 4}, {"name": "rq2-matrix-throughput",
+                                  "number": 13}, {"name": "rq2-matrix-tpot", "number": 14}]
 
 
 def test_each_table_is_printed_under_its_name_and_its_number_in_the_arxiv_version(tmp_path: Path) -> None:
@@ -276,12 +276,16 @@ def test_verify_takes_jobs_and_checks_an_experiment_named_twice_once() -> None:
     assert once["compared"] == twice["compared"] > 0 and twice["differ"] == []
 
 
-@pytest.mark.parametrize("experiment", ["rq3", "appendix", "ablation"])
-def test_gpu_is_refused_where_it_cannot_restrict(tmp_path: Path, experiment: str) -> None:
+@pytest.mark.parametrize(("experiment", "frozen"), [
+    ("rq3", True),  # printed as published: every GPU's rows (fitted again, its one table is restricted)
+    ("appendix", True), ("appendix", False),  # the run times are printed as published either way
+    ("ablation", True), ("ablation", False),
+])
+def test_gpu_is_refused_where_it_cannot_restrict(tmp_path: Path, experiment: str, frozen: bool) -> None:
     """The review's F09: --gpu was ignored for these, without a word."""
-    r = RUN.invoke(app, ["replicate", "run", experiment, "--from-frozen", "--gpu", "h100_sxm", "--output-dir",
-                         str(tmp_path)])
-    assert r.exit_code == 2 and "--gpu: restricts rq1 and rq2" in r.output, r.output
+    r = RUN.invoke(app, ["replicate", "run", experiment, *(["--from-frozen"] if frozen else []), "--gpu", "h100_sxm",
+                         "--output-dir", str(tmp_path)])
+    assert r.exit_code == 2 and "--gpu: restricts rq1 and rq2, and rq3 when" in r.output, r.output
 
 
 def test_rq1_restricted_to_one_gpu_says_so_and_names_its_all_row(tmp_path: Path) -> None:

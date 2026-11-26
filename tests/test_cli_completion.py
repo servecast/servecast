@@ -103,3 +103,23 @@ def test_fish_honours_xdg_config_home(tmp_path: Path) -> None:
     r = CliRunner().invoke(app, ["completion", "install", "fish"], env=sandbox(tmp_path, XDG_CONFIG_HOME=str(xdg)))
     assert r.exit_code == 0 and (xdg / "fish" / "completions" / "servecast.fish").is_file()
     assert not (tmp_path / ".config").exists()
+
+
+def test_with_completes_to_the_calibration_names() -> None:
+    """The review's F24: --with completed files only, while names are its main form."""
+    out = complete({"_SERVECAST_COMPLETE": "complete_zsh", "_TYPER_COMPLETE_ARGS": "servecast predict --with a100_"})
+    assert '"a100_sxm_40gb/c62ebe75"' in out and '"h100_sxm/c62ebe75"' not in out, out
+
+
+def test_with_falls_back_to_files_when_no_name_matches() -> None:
+    out = complete({"_SERVECAST_COMPLETE": "complete_zsh", "_TYPER_COMPLETE_ARGS": "servecast predict --with ./"})
+    assert out.strip() == "_files", out
+
+
+def test_replicate_predict_completes_the_papers_calibrations_and_llms() -> None:
+    out = complete({"_SERVECAST_COMPLETE": "complete_zsh",
+                    "_TYPER_COMPLETE_ARGS": "servecast replicate predict --with h100_sxm/"})
+    assert '"h100_sxm/d9cbf1d3/llama-3-8b"' in out and "c62ebe75" not in out, out
+    out = complete({"_SERVECAST_COMPLETE": "complete_zsh",
+                    "_TYPER_COMPLETE_ARGS": "servecast replicate predict --to qw"})
+    assert '"qwen2.5-7b"' in out, out

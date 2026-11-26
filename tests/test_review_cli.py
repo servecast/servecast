@@ -4,6 +4,8 @@ hub's 401 and the id said once (F22), and a local copy with another context leng
 
 from __future__ import annotations
 
+import json
+import re
 from pathlib import Path
 
 import pytest
@@ -100,3 +102,24 @@ def test_set_refuses_a_path_that_names_no_entry(item: str, message: str) -> None
     out, problems = mf.apply_sets(LOADS, [item])
     assert [p.path for p in problems] == ["--set"] and message in problems[0].message, problems
     assert out == LOADS
+
+
+@pytest.mark.parametrize("what", ["gpus", "laws", "components", "calibrations", "manifests", "models"])
+def test_list_json_is_records_with_identifier_keys(what: str) -> None:
+    """The review's F13: --format json was the printed table, its headers as keys and every value a string."""
+    code, output = run("list", what, "--format", "json")
+    rows = json.loads(output)
+    assert code == 0 and rows
+    assert all(re.fullmatch(r"[a-z][a-z0-9_]*", key) for row in rows for key in row), rows[0]
+
+
+def test_list_json_keeps_numbers_booleans_and_lists() -> None:
+    a100 = next(r for r in json.loads(run("list", "gpus", "--format", "json")[1]) if r["gpu"] == "a100_sxm_40gb")
+    assert a100["sms"] == 108 and a100["memory_gib"] == 40 and a100["shipped_cost_laws"] == ["d9cbf1d3", "c62ebe75"]
+    models = json.loads(run("list", "models", "--format", "json")[1])
+    assert all(isinstance(r[k], int) for r in models for k in ("layers", "width", "query_heads", "kv_heads"))
+    laws = {r["law"]: r for r in json.loads(run("list", "laws", "--format", "json")[1])}
+    assert laws["d9cbf1d3"]["in_paper"] is True and laws["c62ebe75"]["calibrated_per"] == "gpu"
+    example = next(r for r in json.loads(run("list", "manifests", "--format", "json")[1])
+                   if r["manifest"] == "example-a100")
+    assert isinstance(example["load"], list) and isinstance(example["load"][0]["concurrency"], int)

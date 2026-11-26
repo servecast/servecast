@@ -20,8 +20,8 @@ def _fail(status: int, message: str) -> NoReturn:
 
 
 def list_(output_format: str) -> None:
-    rows = [{"experiment": e.key, "what it reproduces": e.title,
-             "tables": ", ".join(f"{t} (Table {data.tables()[t]['number']})" for t in e.tables),
+    rows: list[dict[str, Any]] = [{"experiment": e.key, "title": e.title,
+             "tables": [{"name": t, "number": data.tables()[t]["number"]} for t in e.tables],
              "recomputed": {"diagonal": "324 load points (ServeCast); Vidur: stored",
                             "transfers": "1,944 load points (ServeCast); Vidur: stored",
                             "refits": "the 18 calibrations, fitted again from their shipped profiling data; the "
@@ -30,11 +30,12 @@ def list_(output_format: str) -> None:
                                         "fitted again from the shipped traces"}.get(
                  e.recompute or "", "printed table only")} for e in R.EXPERIMENTS.values()]
     if output_format == "json":
-        typer.echo(json.dumps(rows, indent=2))
+        typer.echo(json.dumps(rows, indent=1))
         return
     for r in rows:
-        typer.echo(f"{r['experiment']:<9} {r['what it reproduces']}")
-        typer.echo(f"{'':<9} tables: {r['tables']}; recomputed: {r['recomputed']}")
+        typer.echo(f"{r['experiment']:<9} {r['title']}")
+        tables = ", ".join(f"{t['name']} (Table {t['number']})" for t in r["tables"])
+        typer.echo(f"{'':<9} tables: {tables}; recomputed: {r['recomputed']}")
 
 
 def fetch(output_format: str = "table") -> None:
@@ -98,12 +99,21 @@ def _print_table(name: str, rows: list[list[Any]]) -> None:
         typer.echo("  ".join(T.printed(c).ljust(w) for c, w in zip(r, widths, strict=False)))
 
 
+def _restricted_by_gpu(exp: R.Experiment, from_frozen: bool) -> bool:
+    """Whether --gpu restricts every table the experiment prints: rq1's and rq2's are computed from that GPU's
+    campaigns, a refitted table from its calibrations, and a table printed as published keeps every GPU's rows."""
+    if exp.recompute in ("diagonal", "transfers"):
+        return True
+    return exp.recompute == "refits" and not from_frozen and all(t in T.REFITTED for t in exp.tables)
+
+
 def run(experiment: str, gpu: str | None, from_frozen: bool, output_dir: Path, output_format: str, jobs: int) -> None:
     exp = R.EXPERIMENTS[experiment]
     if gpu is not None and gpu not in data.GPUS:
         _fail(2, f"--gpu: one of {', '.join(data.GPUS)}")
-    if gpu is not None and exp.recompute not in ("diagonal", "transfers"):  # it was ignored without a word
-        _fail(2, f"--gpu: restricts rq1 and rq2; {experiment} prints every GPU's rows at once")
+    if gpu is not None and not _restricted_by_gpu(exp, from_frozen):  # it was ignored without a word
+        _fail(2, f"--gpu: restricts rq1 and rq2, and rq3 when its calibrations are fitted again (without "
+                 f"--from-frozen); {experiment} would print every GPU's rows")
     recomputed = None
     refitted = None
     laws = None

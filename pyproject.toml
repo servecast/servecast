@@ -5,17 +5,28 @@ build-backend = "hatchling.build"
 [project]
 name = "servecast"
 version = "0.0.1"
-description = "Predicts LLM serving performance (TTFT, TPOT, throughput) on a GPU running vLLM. This release only reserves the name."
+description = "Predicts LLM serving performance (TTFT, TPOT, throughput) on a GPU running vLLM."
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = ["typer>=0.29,<1", "pydantic>=2.10,<3", "PyYAML>=6", "numpy>=2.2,<3", "scipy>=1.15,<2"]
 authors = [{ name = "The ServeCast authors" }]
+keywords = ["llm", "inference", "serving", "vllm", "performance model", "gpu", "ttft", "tpot"]
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: System :: Benchmark",
 ]
 
 [project.optional-dependencies]
@@ -29,7 +40,10 @@ profile = ["vllm==0.25.1; sys_platform == 'linux'", "nvidia-ml-py>=13.610.43; sy
            "ninja>=1.13.2; sys_platform == 'linux'"]
 
 [project.urls]
-Homepage = "https://github.com/servecast/servecast"
+Homepage = "https://servecast.github.io/servecast/"
+Documentation = "https://servecast.github.io/servecast/"
+Source = "https://github.com/servecast/servecast"
+Issues = "https://github.com/servecast/servecast/issues"
 
 [project.scripts]
 servecast = "servecast.cli.app:main"

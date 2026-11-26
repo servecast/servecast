@@ -38,7 +38,7 @@ You write it; every command reads it.
 |---|---|---|---|---|
 | `use` | string or null |  |  | A calibration name, a calibration.json, or the folder calibrate writes. `--with` sets it. |
 | `data` | string or null |  |  | A profiling-data directory to fit a calibration from. |
-| `transfer` | boolean |  | `False` | Predict an LLM other than the one the calibration was fitted on: a transfer. A per-GPU calibration is fitted on synthetic models, so every LLM it predicts is a transfer. `--to` sets it. |
+| `transfer` | boolean |  | `False` | Predict an LLM other than the one the calibration was fitted on: a transfer. A per-GPU calibration is fitted on synthetic models, so every LLM it predicts is a transfer. `--to` sets it. The manifest.yaml a prediction writes records whether it was one. |
 
 ### manifest: Capacity
 

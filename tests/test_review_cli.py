@@ -74,3 +74,29 @@ def test_a_local_copy_with_another_context_length_is_the_same_llm() -> None:
     shorter = {**R.architecture(llm), "max_context": 32768}
     assert R._same_llm(R.architecture(llm), shorter)
     assert not R._same_llm(R.architecture(llm), {**shorter, "layers": 27})
+
+
+LOADS = {"traffic": {"load": [{"type": "concurrency", "concurrency": 4}, {"type": "concurrency", "concurrency": 8}]}}
+
+
+def test_set_names_an_entry_of_a_list_by_its_index() -> None:
+    """The review's MF-20: --set refused traffic.load.0.concurrency, the path its own errors and explain use."""
+    from servecast.core import manifest as mf
+
+    out, problems = mf.apply_sets(LOADS, ["traffic.load.1.concurrency=16", "traffic.load.0={type: rate, rate: 2}"])
+    assert problems == []
+    assert out["traffic"]["load"] == [{"type": "rate", "rate": 2}, {"type": "concurrency", "concurrency": 16}]
+    assert LOADS["traffic"]["load"][1]["concurrency"] == 8  # the input is left as it was
+
+
+@pytest.mark.parametrize(("item", "message"), [
+    ("traffic.load.2.concurrency=16", "traffic.load has 2 entries, numbered from 0"),
+    ("traffic.load.concurrency=16", "name an entry by its index, such as traffic.load.0.concurrency"),
+    ("traffic.load.0.concurrency.x=1", "traffic.load.0.concurrency is 4, not a mapping"),
+])
+def test_set_refuses_a_path_that_names_no_entry(item: str, message: str) -> None:
+    from servecast.core import manifest as mf
+
+    out, problems = mf.apply_sets(LOADS, [item])
+    assert [p.path for p in problems] == ["--set"] and message in problems[0].message, problems
+    assert out == LOADS

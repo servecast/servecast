@@ -159,7 +159,8 @@ class Calibration(Strict):
     data: Path | None = Field(None, description="A profiling-data directory to fit a calibration from.")
     transfer: bool = Field(False, description="Predict an LLM other than the one the calibration was fitted on: a "
                                               "transfer. A per-GPU calibration is fitted on synthetic models, so "
-                                              "every LLM it predicts is a transfer. `--to` sets it.")
+                                              "every LLM it predicts is a transfer. `--to` sets it. "
+                                              "The manifest.yaml a prediction writes records whether it was one.")
 
     @model_validator(mode="after")
     def _not_both(self) -> Calibration:
@@ -605,10 +606,17 @@ def apply_sets(raw: dict[str, Any], sets: Iterable[str]) -> tuple[dict[str, Any]
             continue
         keys = path.split(".")
         trial = copy.deepcopy(result)
-        node = trial
+        node: dict[str, Any] | list[Any] = trial
         for depth, key in enumerate(keys[:-1]):
+            if isinstance(node, list):  # an entry of a list, by its index, as error paths and `manifest explain` say
+                problem = _index_problem(path, keys, depth, node)
+                if problem:
+                    problems.append(problem)
+                    break
+                node = node[int(key)]
+                continue
             value = node.get(key)
-            if value is not None and not isinstance(value, dict):
+            if value is not None and not isinstance(value, (dict, list)):
                 if depth == 0 and key == "versions":  # a date: the component overrides keep it, as `as_of`
                     value = {"as_of": value}
                 else:
@@ -616,12 +624,34 @@ def apply_sets(raw: dict[str, Any], sets: Iterable[str]) -> tuple[dict[str, Any]
                     problems.append(Problem("--set", f"{path}: {where} is {value!r}, not a mapping; set {where} "
                                                      "itself"))
                     break
-            node[key] = value if isinstance(value, dict) else {}
+            node[key] = value if isinstance(value, (dict, list)) else {}
             node = node[key]
         else:
-            node[keys[-1]] = yaml.safe_load(text)
+            if isinstance(node, list):
+                problem = _index_problem(path, keys, len(keys) - 1, node)
+                if problem:
+                    problems.append(problem)
+                    continue
+                node[int(keys[-1])] = yaml.safe_load(text)
+            else:
+                node[keys[-1]] = yaml.safe_load(text)
             result = trial
     return result, problems
+
+
+def _index_problem(path: str, keys: list[str], depth: int, entries: list[Any]) -> Problem | None:
+    """Why keys[depth] does not name an entry of the list at keys[:depth], or None when it does."""
+    key, where = keys[depth], ".".join(keys[:depth])
+    if key.isdigit() and int(key) < len(entries) and (depth == len(keys) - 1 or isinstance(entries[int(key)], dict)):
+        return None
+    if not key.isdigit():
+        return Problem("--set", f"{path}: {where} is a list; name an entry by its index, such as {where}.0."
+                                f"{'.'.join(keys[depth:])}")
+    if int(key) >= len(entries):
+        return Problem("--set", f"{path}: {where} has {len(entries)} entries, numbered from 0; set {where} itself "
+                                "to add one")
+    return Problem("--set", f"{path}: {where}.{key} is {entries[int(key)]!r}, not a mapping; set {where}.{key} "
+                            "itself")
 
 
 class _UniqueKeyLoader(yaml.SafeLoader):

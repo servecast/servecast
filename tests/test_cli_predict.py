@@ -242,6 +242,23 @@ def test_the_resolved_manifest_runs_again_as_a_manifest(tmp_path: Path, calibrat
     assert again["points"] == first["points"] and again["resolved_manifest"] == first["resolved_manifest"]
 
 
+@pytest.mark.parametrize(("model", "transfer"), [
+    ("meta-llama/Meta-Llama-3-8B", False),  # the calibration's own LLM, although the flag permits a transfer
+    ("Qwen/Qwen2.5-7B", True),
+])
+def test_the_resolved_manifest_records_whether_the_prediction_was_a_transfer(tmp_path: Path, model: str,
+                                                                            transfer: bool) -> None:
+    """The review's site-10: the shipped example sets transfer: true, and a prediction for the calibration's own LLM
+    was recorded as a transfer."""
+    manifest = {**BASE, "engine": {**BASE["engine"], "model": model},
+                "calibration": {**BASE["calibration"], "transfer": True}}
+    code, output, out = predict(tmp_path, manifest)
+    assert code == 0, output
+    doc = json.loads((out / "prediction.json").read_text(encoding="utf-8"))
+    assert doc["resolved_manifest"]["calibration"]["transfer"] is transfer
+    assert yaml.safe_load((out / "manifest.yaml").read_text(encoding="utf-8"))["calibration"]["transfer"] is transfer
+
+
 def test_an_architecture_that_is_not_the_llms_is_refused(tmp_path: Path) -> None:
     arch = {"layers": 28, "hidden": 4096, "ffn": 14336, "heads": 32, "kv_heads": 8, "kv_width": 1024,
             "vocab": 128256, "max_context": 8192}

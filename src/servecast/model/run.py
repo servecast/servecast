@@ -506,7 +506,9 @@ def resolved_manifest(m: Manifest, pl: Plan) -> dict[str, Any]:
     # can resolve, and the fit is cached, so running the manifest again reads it back
     doc["calibration"] = ({"data": str(m.calibration.data)} if m.calibration.data is not None
                           else {"use": pl.calibration_name})
-    doc["calibration"]["transfer"] = m.calibration.transfer
+    # whether the prediction was a transfer, as ServeCast found it: the flag permits one, and the shipped example
+    # sets it, so a prediction for the calibration's own LLM was recorded as a transfer
+    doc["calibration"]["transfer"] = not fitted_on_llm(pl.calibration, pl.llm)
     as_of = _as_of(m)
     doc["versions"] = {**({"as_of": as_of} if as_of else {}), **pl.components}  # every component, by name
     return doc

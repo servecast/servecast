@@ -100,11 +100,13 @@ select = ["E", "F", "W", "I", "B", "UP", "N", "RUF"]
 ignore = ["N802", "N803", "N806", "N812", "N815", "RUF001", "RUF002", "RUF003"]
 
 [tool.ruff.lint.per-file-ignores]
-# released component modules mirror the reference implementation line for line and never change (versions.lock):
+# released component modules mirror the reference implementation line for line and never change (versions.lock,
+# which tools/versions_lock.py and tests/test_versions_lock.py check):
 # style rules that would rewrite their expressions do not apply
 "src/servecast/**/v20*.py" = ["B", "E5", "E7", "W", "I", "UP", "N", "RUF"]
 
 [tool.mypy]
+# 3.12, not the 3.11 the package supports: numpy 2.5's own stubs use 3.12 syntax; the wheel job runs the suite on 3.11
 python_version = "3.12"
 packages = ["servecast"]
 mypy_path = "src"

@@ -1,0 +1,11 @@
+# The released component modules and their sha256: a change to one is a new version in a new module.
+# Written by `python tools/versions_lock.py --update`, only when a released module is added.
+772c34e3f8fae0ff324b73fef8ec04f64a3acf20e67a9aa06ed74e74f3797d57  src/servecast/calibrate/procedure/v2026_10.py
+a8af88c2279310b94eb63895ca9f0fbe8ca5243ade9247352ea23f443617bd95  src/servecast/calibrate/procedure/v2026_11.py
+2b2806b850b30a98a7d756f0bbffa526506ce83e86ff392b60ec54385f5fe849  src/servecast/core/estimator/v2026_10.py
+17980baddb7eba133b10588f8b7b3a7a2ec141f4bdc18aa1009e5e543341baf8  src/servecast/core/estimator/v2026_11.py
+b6b0528b477e65377aca11db943cf48af377720f6714cc6ec24fd32df6bcf8eb  src/servecast/core/sampler/v2026_11.py
+745e04680b03f6ff2663c90e369f31fed97be5073a9e630690785d9bc5801a7c  src/servecast/model/law/v2026_10.py
+fcf39dcbc54486d77643ce2f2a0464aa23483b701528bcd192c86192e20a316d  src/servecast/model/law/v2026_11.py
+7528de4814e5b8712a97d6eef447b6c45e9656fd583c25f7115a8d9fbe540256  src/servecast/model/population/v2026_10.py
+4cda9a7719943f9528a4b93f72d624b2463da4073a7865adf70d19ab5b604978  src/servecast/model/workload/v2026_10.py

@@ -782,7 +782,6 @@ Generated from `servecast --help` by `python tools/gen_cli_reference.py`; do not
 │ --help  -h      <bool>  Show this message and exit.                                              │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
-│ --dest          DIR           Where the data go (default your cache directory).                  │
 │ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
 │                               [default: table]                                                   │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
@@ -888,7 +887,7 @@ Generated from `servecast --help` by `python tools/gen_cli_reference.py`; do not
 │ --help  -h      <bool>  Show this message and exit.                                              │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Inputs ─────────────────────────────────────────────────────────────────────────────────────────╮
-│ --gpu                <str>   Restrict to one of the paper's GPUs.                                │
+│ --gpu                <str>   Restrict rq1 or rq2 to one of the paper's GPUs.                     │
 │ --from-frozen        <bool>  Print the tables from the shipped predictions, or as published, in  │
 │                              seconds, instead of recomputing.                                    │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
@@ -926,8 +925,8 @@ Generated from `servecast --help` by `python tools/gen_cli_reference.py`; do not
  the ablation tables from the shipped predictions of the ablated models and the workload-law table
  from the shipped laws, fits the paper's 18 calibrations again from their shipped profiling data
  for the coefficients and the training MAPE, and compares each cell with the printed one at its
- printed precision. It takes seconds. A damaged data file or a changed fit shows here. replicate
- run rq1 and rq2 recompute the predictions themselves.
+ printed precision. It takes seconds with one process per core. A damaged data file or a changed
+ fit shows here. replicate run rq1 and rq2 recompute the predictions themselves.
 
 ╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮
 │   experiments...      <list[rq1|rq2|rq3|ablation|appendix  Which experiments (default: all of    │
@@ -939,6 +938,10 @@ Generated from `servecast --help` by `python tools/gen_cli_reference.py`; do not
 ╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
 │ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
 │                               [default: table]                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Advanced ───────────────────────────────────────────────────────────────────────────────────────╮
+│ --jobs        <int range> [x>=1]  Calibrations fitted in parallel processes (default: one per    │
+│                                   core).                                                         │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 
  Examples

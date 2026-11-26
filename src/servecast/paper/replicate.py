@@ -86,7 +86,14 @@ def recompute(experiment: Experiment, gpu: str | None, jobs: int,
               report: Callable[[int, int, tuple, dict[str, Any]], None] | None = None) -> dict[tuple, dict[str, Any]]:
     todo = jobs_of(experiment, gpu)
     out: dict[tuple, dict[str, Any]] = {}
-    with ProcessPoolExecutor(max_workers=max(1, jobs)) as ex:
+    if jobs <= 1:  # in this process: --jobs 1 used to start a pool all the same
+        for i, t in enumerate(todo, 1):
+            key, row = _job(t)
+            out[key] = row
+            if report is not None:
+                report(i, len(todo), key, row)
+        return out
+    with ProcessPoolExecutor(max_workers=jobs) as ex:
         futures = [ex.submit(_job, t) for t in todo]
         for i, fut in enumerate(as_completed(futures), 1):
             key, row = fut.result()
@@ -127,8 +134,9 @@ def compute_tables(experiment: Experiment, recomputed: Mapping[tuple, Mapping[st
             pred = tables.frozen if recomputed is None else predicted_from(recomputed)
             if tables.COMPUTED[name][0] == "bands":
                 out[name] = tables.compute(name, camps, pred, published[name])
-            elif gpu is not None and tables.COMPUTED[name][0] == "accuracy":
-                out[name] = tables.accuracy(camps, pred)
+            elif gpu is not None and tables.COMPUTED[name][0] == "accuracy":  # "All" here is all of one GPU
+                out[name] = [[r[0], f"All on the {data.GPUS[gpu]}" if r[1] == "All" else r[1], *r[2:]]
+                             for r in tables.accuracy(camps, pred)]
             elif gpu is not None:
                 rows = tables.matrix(data.campaigns(), str(tables.COMPUTED[name][1]), pred)
                 label = data.GPUS[gpu]

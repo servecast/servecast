@@ -131,13 +131,19 @@ def main(argv: list[str] | None = None) -> int:
         todo = todo[: a.limit]
     results: list[dict[str, Any]] = []
     t0 = time.time()
-    with ProcessPoolExecutor(max_workers=max(1, a.jobs)) as ex:
-        futures = [ex.submit(run, t) for t in todo]
-        for i, fut in enumerate(as_completed(futures), 1):
-            r = fut.result()
-            results.append(r)
-            mark = "identical" if not r["diffs"] else "DIFFERS " + ", ".join(sorted(r["diffs"]))
-            print(f"[{i:>5}/{len(todo)}] {r['wall_s']:7.1f} s  {mark:<20} {r['key']}", flush=True)
+    def report(i: int, r: dict[str, Any]) -> None:
+        results.append(r)
+        mark = "identical" if not r["diffs"] else "DIFFERS " + ", ".join(sorted(r["diffs"]))
+        print(f"[{i:>5}/{len(todo)}] {r['wall_s']:7.1f} s  {mark:<20} {r['key']}", flush=True)
+
+    if a.jobs <= 1:  # in this process: --jobs 1 used to start a pool all the same
+        for i, t in enumerate(todo, 1):
+            report(i, run(t))
+    else:
+        with ProcessPoolExecutor(max_workers=a.jobs) as ex:
+            futures = [ex.submit(run, t) for t in todo]
+            for i, fut in enumerate(as_completed(futures), 1):
+                report(i, fut.result())
     bad = [r for r in results if r["diffs"]]
     print(f"\n{len(results)} load points, {len(results) - len(bad)} identical, {len(bad)} differ "
           f"({time.time() - t0:.0f} s)")

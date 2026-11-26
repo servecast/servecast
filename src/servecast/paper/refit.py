@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import functools
 from concurrent.futures import ProcessPoolExecutor
-from pathlib import Path
 from typing import Any
 
 from servecast.core import versions
@@ -24,8 +23,10 @@ def name(gpu: str, llm: str) -> str:
 def refit_one(gpu: str, llm: str) -> dict[str, Any]:
     """The coefficients and the training MAPE (%) of one calibration, fitted from its shipped profiling data."""
     from servecast.calibrate import fit
+    from servecast.model import predict as P
 
-    profiling, sha256 = fit.read_profiling(Path(name(gpu, llm)))
+    # the shipped file itself: the name, read as a path, found a folder of the same name in the working directory first
+    profiling, sha256 = fit.read_profiling(P.shipped_profiling()[name(gpu, llm)])
     doc = fit.calibrate(profiling, sha256)
     return {"parameters": dict(doc["law"]["parameters"]), "mape": float(doc["fit"]["error_pct"]["mape"])}
 

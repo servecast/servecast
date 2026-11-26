@@ -10,7 +10,6 @@
 │ --help  -h      <bool>  Show this message and exit.                                              │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Output ─────────────────────────────────────────────────────────────────────────────────────────╮
-│ --dest          DIR           Where the data go (default your cache directory).                  │
 │ --format        <table|json>  How the summary is printed. Files on disk do not change.           │
 │                               [default: table]                                                   │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯

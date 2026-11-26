@@ -349,12 +349,7 @@ def replicate_list(output_format: OutputFormat = Format.table) -> None:
 
 @replicate_app.command("fetch", epilog=_examples("servecast replicate fetch",
                                                  see_also="`servecast replicate run`"))
-def replicate_fetch(
-    dest: Annotated[Path | None, typer.Option(
-        "--dest", metavar="DIR", rich_help_panel="Output",
-        help="Where the data go (default your cache directory).")] = None,
-    output_format: OutputFormat = Format.table,
-) -> None:
+def replicate_fetch(output_format: OutputFormat = Format.table) -> None:
     """Download the paper's data record (not in this release).
 
     The record is published with the first release. `replicate run --from-frozen` and the recomputation of rq1 and
@@ -362,7 +357,7 @@ def replicate_fetch(
     """
     from servecast.cli import replicate_cmd
 
-    replicate_cmd.fetch()
+    replicate_cmd.fetch(output_format.value)
 
 
 @replicate_app.command("predict", epilog=_examples(
@@ -398,7 +393,7 @@ def replicate_predict(
 def replicate_run(
     experiment: Annotated[Experiment, typer.Argument(help="Which experiment.")],
     gpu: Annotated[str | None, typer.Option("--gpu", rich_help_panel="Inputs",
-                                            help="Restrict to one of the paper's GPUs.")] = None,
+                                            help="Restrict rq1 or rq2 to one of the paper's GPUs.")] = None,
     from_frozen: Annotated[bool, typer.Option(
         "--from-frozen", rich_help_panel="Inputs",
         help="Print the tables from the shipped predictions, or as published, in seconds, instead of recomputing.")
@@ -431,18 +426,22 @@ def replicate_verify(
     experiments: Annotated[list[Experiment] | None, typer.Argument(
         help="Which experiments (default: all of them).")] = None,
     output_format: OutputFormat = Format.table,
+    jobs: Annotated[int | None, typer.Option("--jobs", min=1, rich_help_panel="Advanced",
+                                             help="Calibrations fitted in parallel processes (default: one per "
+                                                  "core).")] = None,
 ) -> None:
     """Check the paper's printed cells against what the shipped data give.
 
     Rebuilds the accuracy table, its load bands and the transfer tables from the shipped predictions, the ablation
     tables from the shipped predictions of the ablated models and the workload-law table from the shipped laws, fits
     the paper's 18 calibrations again from their shipped profiling data for the coefficients and the training MAPE,
-    and compares each cell with the printed one at its printed precision. It takes seconds. A damaged data file or a
-    changed fit shows here. `replicate run rq1` and `rq2` recompute the predictions themselves.
+    and compares each cell with the printed one at its printed precision. It takes seconds with one process per core.
+    A damaged data file or a changed fit shows here. `replicate run rq1` and `rq2` recompute the predictions
+    themselves.
     """
     from servecast.cli import replicate_cmd
 
-    replicate_cmd.verify([e.value for e in experiments or []], output_format.value)
+    replicate_cmd.verify([e.value for e in experiments or []], output_format.value, jobs)
 
 
 # workload ------------------------------------------------------------------------------------------------

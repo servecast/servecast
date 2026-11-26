@@ -34,7 +34,8 @@ servecast replicate verify
 predictions. It fits the paper's 18 calibrations again from the profiling data that ship with them, for the appendix's
 coefficients and the cost table's training MAPE. It computes the residual, length-model and clock ablations from the
 shipped predictions of the ablated models, and the workload-law table from the shipped laws. It then compares every
-cell with the printed one at its printed precision, 759 cells in a few seconds.
+cell with the printed one at its printed precision, 759 cells in a few seconds with one process per core (`--jobs`
+sets how many).
 
 ## Recompute an experiment
 

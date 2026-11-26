@@ -37,9 +37,13 @@ def list_(output_format: str) -> None:
         typer.echo(f"{'':<9} tables: {r['tables']}; recomputed: {r['recomputed']}")
 
 
-def fetch() -> None:
-    _fail(1, "the paper's data record (raw probes and per-request measurements) is published with the first release; "
-             "`replicate run --from-frozen` and the recomputation of rq1 and rq2 need no download")
+def fetch(output_format: str = "table") -> None:
+    why = ("the paper's data record (raw probes and per-request measurements) is published with the first release; "
+           "`replicate run --from-frozen` and the recomputation of rq1 and rq2 need no download")
+    if output_format == "json":  # it printed the plain text even with --format json
+        typer.echo(json.dumps({"fetched": False, "reason": why}, indent=1))
+        raise typer.Exit(1)
+    _fail(1, why)
 
 
 def predict(with_: str, to: str, trace: str, clients: int, output_format: str, output_dir: Path) -> None:
@@ -98,6 +102,8 @@ def run(experiment: str, gpu: str | None, from_frozen: bool, output_dir: Path, o
     exp = R.EXPERIMENTS[experiment]
     if gpu is not None and gpu not in data.GPUS:
         _fail(2, f"--gpu: one of {', '.join(data.GPUS)}")
+    if gpu is not None and exp.recompute not in ("diagonal", "transfers"):  # it was ignored without a word
+        _fail(2, f"--gpu: restricts rq1 and rq2; {experiment} prints every GPU's rows at once")
     recomputed = None
     refitted = None
     laws = None
@@ -147,7 +153,8 @@ def run(experiment: str, gpu: str | None, from_frozen: bool, output_dir: Path, o
     if output_format == "json":
         typer.echo(json.dumps(doc, indent=1))
         return
-    typer.echo(f"paper replication, {experiment}: {exp.title}")
+    typer.echo(f"paper replication, {experiment}: {exp.title}"
+               + (f" (restricted to the {data.GPUS[gpu]})" if gpu is not None else ""))
     for name, rows in computed.items():
         _print_table(name, rows)
     if recomputed is not None:
@@ -172,14 +179,14 @@ def run(experiment: str, gpu: str | None, from_frozen: bool, output_dir: Path, o
                    "ablated models that ship with ServeCast")
 
 
-def verify(experiments: list[str], output_format: str) -> None:
+def verify(experiments: list[str], output_format: str, jobs: int | None = None) -> None:
     printed_only = [k for k in experiments if not R.EXPERIMENTS[k].recompute]
     checked = [k for k, e in R.EXPERIMENTS.items() if e.recompute]
     if printed_only:  # 0 cells compared used to pass, with nothing checked
         _fail(2, f"{', '.join(printed_only)}: prints the tables as published, so there is nothing to verify; "
                  f"verify checks {', '.join(checked)}")
-    keys = experiments or checked
-    compared, gaps = R.verify(keys, jobs=os.cpu_count() or 1)
+    keys = list(dict.fromkeys(experiments)) or checked  # an experiment named twice is checked once
+    compared, gaps = R.verify(keys, jobs=jobs or os.cpu_count() or 1)
     if output_format == "json":
         typer.echo(json.dumps({"compared": compared, "differ": gaps}, indent=1))
     else:

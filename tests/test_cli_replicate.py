@@ -265,3 +265,57 @@ def test_predict_writes_its_document_to_the_output_directory(tmp_path: Path) -> 
                          "--output-dir", str(tmp_path / "rp")])
     assert r.exit_code == 0, r.output
     assert json.loads((tmp_path / "rp" / "replication.json").read_text(encoding="utf-8"))["identical_to_paper"]
+
+
+# the outside review's replicate findings ------------------------------------------------------------------------
+
+def test_verify_takes_jobs_and_checks_an_experiment_named_twice_once() -> None:
+    """The review's site-8 (no --jobs: one process per core, always) and F18 (rq1 rq1 counted 192 cells, not 96)."""
+    once = json.loads(RUN.invoke(app, ["replicate", "verify", "rq1", "--jobs", "1", "--format", "json"]).output)
+    twice = json.loads(RUN.invoke(app, ["replicate", "verify", "rq1", "rq1", "--jobs", "1", "--format", "json"]).output)
+    assert once["compared"] == twice["compared"] > 0 and twice["differ"] == []
+
+
+@pytest.mark.parametrize("experiment", ["rq3", "appendix", "ablation"])
+def test_gpu_is_refused_where_it_cannot_restrict(tmp_path: Path, experiment: str) -> None:
+    """The review's F09: --gpu was ignored for these, without a word."""
+    r = RUN.invoke(app, ["replicate", "run", experiment, "--from-frozen", "--gpu", "h100_sxm", "--output-dir",
+                         str(tmp_path)])
+    assert r.exit_code == 2 and "--gpu: restricts rq1 and rq2" in r.output, r.output
+
+
+def test_rq1_restricted_to_one_gpu_says_so_and_names_its_all_row(tmp_path: Path) -> None:
+    """The review's F09: the restricted table still labelled its first row "All"."""
+    r = RUN.invoke(app, ["replicate", "run", "rq1", "--from-frozen", "--gpu", "a100_sxm_40gb", "--output-dir",
+                         str(tmp_path)])
+    assert r.exit_code == 0 and "(restricted to the A100)" in r.output and "All on the A100" in r.output, r.output
+
+
+def test_fetch_answers_in_json_when_asked() -> None:
+    """The review's F20: --format json printed the plain text."""
+    r = RUN.invoke(app, ["replicate", "fetch", "--format", "json"])
+    assert r.exit_code == 1 and json.loads(r.stdout)["fetched"] is False
+
+
+def test_recompute_with_one_job_starts_no_process_pool(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The review's Q4: --jobs 1 started a pool and sent every load point to a child process."""
+    def no_pool(*args: object, **kwargs: object) -> None:
+        raise AssertionError("a process pool for --jobs 1")
+
+    monkeypatch.setattr(R, "ProcessPoolExecutor", no_pool)
+    monkeypatch.setattr(R, "jobs_of", lambda experiment, gpu: [("g", "s", "l", "t", 1)])
+    monkeypatch.setattr(R, "_job", lambda t: (t, {"x": 1}))
+    assert R.recompute(R.EXPERIMENTS["rq1"], None, 1) == {("g", "s", "l", "t", 1): {"x": 1}}
+
+
+def test_a_refit_reads_the_shipped_profiling_data_whatever_the_working_directory_holds(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The review's Q2: the calibration's name, read as a path, found a folder of that name in the working directory
+    first, and replicate refitted from it without a word."""
+    from servecast.paper import refit
+
+    decoy = tmp_path / refit.name("a100_sxm_40gb", "meta-llama/Meta-Llama-3-8B")
+    decoy.mkdir(parents=True)
+    (decoy / "profiling.json").write_text("{}", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    assert refit.refit_one("a100_sxm_40gb", "meta-llama/Meta-Llama-3-8B")["parameters"]

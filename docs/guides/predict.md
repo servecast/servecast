@@ -12,7 +12,8 @@ servecast manifest init --template predict > m.yaml
 The template is commented field by field. To start from the example of Get started instead, `servecast manifest show
 example-a100 > m.yaml` writes it. Either way the manifest is a file of yours, given to every command by its path.
 `servecast manifest explain <path>` prints any field's meaning, type, default and allowed values, and `servecast
-manifest validate -c m.yaml` lists every problem in the file at once.
+manifest validate -c m.yaml` lists every problem in the file at once. It then refuses what predict would refuse before
+running, such as a calibration or a trace that does not exist.
 
 ```bash
 servecast manifest explain engine.workers.aggregated.scheduler.max_sequences

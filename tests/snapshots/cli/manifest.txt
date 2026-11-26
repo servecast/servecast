@@ -9,7 +9,7 @@
 ╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮
 │ init      Write a commented manifest to start from.                                              │
 │ show      Print a manifest that ships with ServeCast, to save as a file of yours.                │
-│ validate  Check a manifest and report every problem at once.                                     │
+│ validate  Check a manifest the way predict does, without predicting.                             │
 │ explain   Explain one manifest field: meaning, type, default and allowed values.                 │
 │ schema    Print the JSON Schema of the manifest or of an output file.                            │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯

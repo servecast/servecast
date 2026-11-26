@@ -21,9 +21,50 @@ def write(tmp_path: Path, text: str) -> Path:
     return path
 
 
+def template(tmp_path: Path) -> Path:
+    """The manifest `manifest init` writes: its calibration and its lengths ship, so predict can run it."""
+    path = tmp_path / "m.yaml"
+    assert RUN.invoke(app, ["manifest", "init", "--out", str(path)]).exit_code == 0
+    return path
+
+
 def test_a_valid_manifest_says_so(tmp_path: Path) -> None:
-    result = RUN.invoke(app, ["manifest", "validate", "-c", str(write(tmp_path, PREDICT_WITH_A_TRACE))])
-    assert result.exit_code == 0 and "valid" in result.output
+    result = RUN.invoke(app, ["manifest", "validate", "-c", str(template(tmp_path))])
+    assert result.exit_code == 0 and "valid" in result.output, result.output
+
+
+@pytest.mark.parametrize(("setting", "message"), [
+    # the review's F10, MF-04 and DC-04: validate called each of these "valid", and predict refused it
+    ("calibration.use=nosuch", "calibration.use: no calibration 'nosuch'"),
+    ("traffic.source={type: trace, paths: [no-such-trace.jsonl], format: mooncake}", "no-such-trace.jsonl"),
+    ("engine.hardware=h100_sxm", "engine.hardware: h100_sxm, but the calibration"),
+    ("versions={as_of: 2026-11, calibration_procedure: d9cbf1d3}", "calibration procedure"),
+    ("engine.workers.aggregated.kv_cache.capacity.blocks=2", "fewer tokens than one request"),
+])
+def test_validate_refuses_what_predict_refuses(tmp_path: Path, setting: str, message: str) -> None:
+    path = template(tmp_path)
+    validated = RUN.invoke(app, ["manifest", "validate", "-c", str(path), "--set", setting])
+    predicted = RUN.invoke(app, ["predict", "-c", str(path), "--set", setting, "--output-dir", str(tmp_path / "o")])
+    assert validated.exit_code == predicted.exit_code == 2, (validated.output, predicted.output)
+    assert message in validated.output and message in predicted.output, (validated.output, predicted.output)
+
+
+def test_the_shipped_example_names_the_command_that_saves_its_calibration(tmp_path: Path,
+                                                                           monkeypatch: pytest.MonkeyPatch) -> None:
+    """The review's F14, N9 and MF-14: on a fresh install the shipped example was "valid", and predict refused it
+    without saying that Get started saves my-a100 first."""
+    monkeypatch.setenv("SERVECAST_DATA_DIR", str(tmp_path / "fresh"))
+    result = RUN.invoke(app, ["manifest", "validate", "-c", "example-a100"])
+    assert result.exit_code == 2, result.output
+    assert "servecast calibrate --data <profiling data> --name my-a100" in result.output, result.output
+
+
+def test_json_output_reports_what_predict_refuses(tmp_path: Path) -> None:
+    result = RUN.invoke(app, ["manifest", "validate", "-c", str(template(tmp_path)), "--set", "calibration.use=nosuch",
+                              "--format", "json"])
+    report = json.loads(result.stdout)
+    assert result.exit_code == 2 and report["valid"] is False
+    assert [p["path"] for p in report["problems"]] == ["calibration.use"], report
 
 
 def test_every_problem_is_reported_with_its_file_and_path(tmp_path: Path) -> None:

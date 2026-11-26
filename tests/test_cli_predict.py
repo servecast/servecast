@@ -347,6 +347,26 @@ def test_a_pool_the_workload_fitter_refuses_is_an_input_error(tmp_path: Path, ar
     assert code == 2 and "traffic.pool_size" in output and "internal error" not in output, output
 
 
+@pytest.mark.parametrize("command", ["predict", "validate"])
+def test_a_calibration_without_a_value_its_law_reads_is_an_input_error(tmp_path: Path, command: str) -> None:
+    """The review's MF-08: a per-GPU calibration with a misspelled eta_c_grid was read, and the prediction ended in a
+    KeyError."""
+    from servecast.model import predict as P
+
+    doc = json.loads(Path(P.shipped_calibrations()["a100_sxm_40gb/c62ebe75"]).read_text(encoding="utf-8"))
+    doc["law"]["eta_c_grd"] = doc["law"].pop("eta_c_grid")
+    typo = tmp_path / "typo.json"
+    typo.write_text(json.dumps(doc), encoding="utf-8")
+    manifest = {**BASE, "versions": "2026-11", "calibration": {"use": str(typo), "transfer": True}}
+    if command == "predict":
+        code, output, _ = predict(tmp_path, manifest)
+    else:
+        (tmp_path / "m.yaml").write_text(yaml.safe_dump(manifest), encoding="utf-8")
+        r = RUN.invoke(app, ["manifest", "validate", "-c", str(tmp_path / "m.yaml")])
+        code, output = r.exit_code, r.output
+    assert code == 2 and "eta_c_grid" in output and "internal error" not in output, output
+
+
 def test_timeout_also_bounds_the_workload_law_fit(tmp_path: Path) -> None:
     """The fit before the load points ran unbounded: the guide's synthetic example fitted for minutes under
     --timeout 60. The default 10,000-request synthetic pool cannot be fitted in 1 s."""

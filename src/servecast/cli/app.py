@@ -10,13 +10,16 @@ import json
 import sys
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 import yaml
 from typer._completion_classes import completion_init
 
 from servecast import __version__
+
+if TYPE_CHECKING:
+    from servecast.core.manifest import Manifest, Problem
 
 HELP_OPTIONS = {"help_option_names": ["-h", "--help"]}
 
@@ -537,12 +540,32 @@ def manifest_show(
     typer.echo(shipped[name].read_text(encoding="utf-8"), nl=False)
 
 
+def _what_predict_refuses(checked: Manifest) -> list[Problem]:
+    """The first problem predict would refuse in a valid file, found by the same lookups predict runs (the
+    calibration, then `model.run.resolve`), short of fitting the workload law: a calibration or a trace that does not
+    exist, or a GPU other than the calibration's, used to be "valid"."""
+    from servecast.cli import predict_cmd
+    from servecast.core.manifest import ManifestError, Problem
+    from servecast.model import run as R
+
+    try:
+        calibration, _, _ = predict_cmd.resolve_calibration(checked)
+        R.resolve(checked, calibration)
+    except ManifestError as error:
+        path, sep, message = str(error).partition(": ")
+        return [Problem(path, message) if sep else Problem("(manifest)", str(error))]
+    return []
+
+
 @manifest_app.command("validate", epilog=_examples("servecast manifest validate -c m.yaml",
                                                    see_also="`servecast manifest explain`"))
 def manifest_validate(config: Config, set_: Sets = None, output_format: OutputFormat = Format.table) -> None:
-    """Check a manifest and report every problem at once.
+    """Check a manifest the way predict does, without predicting.
 
-    Each problem is reported as `file: path: message`, with the allowed values.
+    Reports every problem in the file at once, as `file: path: message` with the allowed values. A file without any is
+    then resolved as predict resolves it (the calibration, the component versions, the LLM, the deployment and the
+    request pool), and the first problem predict would refuse is reported. The workload law is not fitted, and
+    predict can still refuse a small pool when it fits it.
     """
     from servecast.core import manifest
 
@@ -559,8 +582,10 @@ def manifest_validate(config: Config, set_: Sets = None, output_format: OutputFo
         typer.echo(f"{config}: a manifest is a YAML mapping", err=True)
         raise typer.Exit(2)
     raw, problems = manifest.apply_sets(raw, set_ or [])
-    _, invalid = manifest.validate(raw)
+    checked, invalid = manifest.validate(raw)
     problems += invalid
+    if not problems and checked is not None:  # a valid file: what predict refuses before it runs, refused here too
+        problems += _what_predict_refuses(checked)
     if output_format is Format.json:
         typer.echo(json.dumps({"file": str(config), "valid": not problems,
                                "problems": [{"path": p.path, "message": p.message} for p in problems]}, indent=2))

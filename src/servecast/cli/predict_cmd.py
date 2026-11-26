@@ -65,7 +65,8 @@ def carried_capacity(to: str | None, sets: list[str], original: str | None) -> s
 
 
 def find_calibration(name: str) -> tuple[dict[str, Any], str, bytes]:
-    """A shipped calibration, one of the user's (saved by `servecast calibrate`), or a file."""
+    """A shipped calibration, one of the user's (saved by `servecast calibrate`), or a file. ManifestError when there
+    is none, or the file is not a calibration: `manifest validate` reports it as predict does."""
     from servecast.core import calibration as calibrations
     from servecast.model import predict as P
 
@@ -77,14 +78,17 @@ def find_calibration(name: str) -> tuple[dict[str, Any], str, bytes]:
             try:
                 doc = json.loads(body)
             except ValueError as error:  # not JSON, or not UTF-8
-                fail(2, f"calibration.use: {path} is not valid JSON: {error}")
+                raise mf.ManifestError(f"calibration.use: {path} is not valid JSON: {error}") from None
             try:
                 doc = calibrations.parse(doc, path)  # servecast-calibration/2; a /1 file is converted
             except ValueError as error:
-                fail(2, f"calibration.use: {error}")
+                raise mf.ManifestError(f"calibration.use: {error}") from None
             return doc, str(doc.get("name") or name), body
-    fail(2, f"calibration.use: no calibration {name!r}; shipped: {', '.join(shipped)} "
-            "(servecast list calibrations shows yours too)")
+    # the shipped example names my-a100, which Get started saves first: say how to save a calibration under a name
+    how = "" if name.endswith(".json") else (f"; `servecast calibrate --data <profiling data> --name {name}` saves one "
+                                             "of yours under that name")
+    raise mf.ManifestError(f"calibration.use: no calibration {name!r}; shipped: {', '.join(shipped)}{how} "
+                           "(servecast list calibrations shows yours too)")
 
 
 def fit_on_the_fly(manifest: mf.Manifest) -> tuple[dict[str, Any], str, bytes]:
@@ -97,11 +101,22 @@ def fit_on_the_fly(manifest: mf.Manifest) -> tuple[dict[str, Any], str, bytes]:
         typer.echo("servecast predict: fitting the calibration (cached afterwards)", err=True)
         doc, body = fit.cached(Path(str(manifest.calibration.data)), law)
     except ValueError as error:
-        fail(2, f"calibration.data: {error}")
+        raise mf.ManifestError(f"calibration.data: {error}") from None
     sha = str(doc["fit"]["profiling_sha256"])
     typer.echo(f"servecast predict: calibration {doc['name']} (profiling data sha256 {sha[:12]}); "
                f"save it with `servecast calibrate` to reuse it with --with", err=True)
     return doc, f"{doc['name']} (fitted from profiling data)", body
+
+
+def resolve_calibration(manifest: mf.Manifest) -> tuple[dict[str, Any], str, bytes]:
+    """The manifest's calibration, with the name a prediction records and the file's bytes: fitted from its profiling
+    data (cached), or found by name or path. ManifestError when there is none."""
+    if manifest.calibration.data is not None:
+        return fit_on_the_fly(manifest)
+    if manifest.calibration.use is None:
+        raise mf.ManifestError("calibration: give `use` (a calibration name or path, or --with) or `data` (profiling "
+                               "data)")
+    return find_calibration(str(manifest.calibration.use))
 
 
 def parse_sweep(texts: list[str] | None, command: str = "predict") -> tuple[str, list[str]] | None:
@@ -163,10 +178,10 @@ def main(config: Path, *, with_: str | None, to: str | None, sets: list[str], sw
             pass
     except OSError as error:
         fail(3, f"--output-dir: cannot write {output_dir}: {error.strerror}")
-    if manifest.calibration.data is not None:
-        calibration, name, body = fit_on_the_fly(manifest)
-    else:
-        calibration, name, body = find_calibration(str(manifest.calibration.use))
+    try:
+        calibration, name, body = resolve_calibration(manifest)
+    except mf.ManifestError as error:
+        fail(2, str(error))
 
     def progress(msg: str) -> None:
         typer.echo(f"servecast predict: {msg}", err=True)

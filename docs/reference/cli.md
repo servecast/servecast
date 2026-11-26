@@ -398,7 +398,7 @@ Generated from `servecast --help` by `python tools/gen_cli_reference.py`; do not
 ╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮
 │ init      Write a commented manifest to start from.                                              │
 │ show      Print a manifest that ships with ServeCast, to save as a file of yours.                │
-│ validate  Check a manifest and report every problem at once.                                     │
+│ validate  Check a manifest the way predict does, without predicting.                             │
 │ explain   Explain one manifest field: meaning, type, default and allowed values.                 │
 │ schema    Print the JSON Schema of the manifest or of an output file.                            │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
@@ -514,9 +514,12 @@ Generated from `servecast --help` by `python tools/gen_cli_reference.py`; do not
 ```text
  Usage: servecast manifest validate [OPTIONS]
 
- Check a manifest and report every problem at once.
+ Check a manifest the way predict does, without predicting.
 
- Each problem is reported as file: path: message, with the allowed values.
+ Reports every problem in the file at once, as file: path: message with the allowed values. A file
+ without any is then resolved as predict resolves it (the calibration, the component versions, the
+ LLM, the deployment and the request pool), and the first problem predict would refuse is reported.
+ The workload law is not fitted, and predict can still refuse a small pool when it fits it.
 
 ╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
 │ --help  -h      <bool>  Show this message and exit.                                              │

@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from servecast import __version__
+from servecast.core import calibration as calibrations
 from servecast.core import deployment as deployments
 from servecast.core import estimator as estimators
 from servecast.core import gpus, versions
@@ -28,6 +29,7 @@ from servecast.core import summary as summaries
 from servecast.core.manifest import Manifest, ManifestError, SyntheticSource, VersionsSpec
 from servecast.core.paths import cache_dir
 from servecast.model import geometry as geometries
+from servecast.model import law as laws
 from servecast.model import predict as P
 from servecast.model import workload as workloads
 
@@ -269,10 +271,40 @@ resolve_targets = deployments.stop_targets
 load_points = deployments.load_points
 
 
-def plan(m: Manifest, calibration: Mapping[str, Any], calibration_name: str, calibration_bytes: bytes, *,
-         sweep: tuple[str, list[str]] | None = None, offline: bool = False,
-         progress: Callable[[str], None] | None = None, fit_seconds: float | None = None) -> Plan:
-    """Resolve everything a prediction needs, refusing a manifest it cannot run."""
+@dataclasses.dataclass(frozen=True)
+class Resolved:
+    """What a prediction resolves from its manifest and calibration before it fits the workload law."""
+
+    points: list[tuple[int, float]]
+    components: dict[str, str]
+    llm: geometries.Geometry
+    engine: P.Engine
+    engine_resolved: dict[str, Any]
+    deployment: deployments.Deployment
+    pool_p: list[int]
+    pool_g: list[int]
+    pool_header: dict[str, Any]
+    warnings: list[str]
+    phase_cap: int
+
+
+def check_calibration(calibration: Mapping[str, Any]) -> None:
+    """A calibration holds every parameter its cost law reads: one with a misspelled eta_c_grid used to be read, and
+    the prediction then ended in a KeyError."""
+    cost_law = str(calibration["law"]["cost_law"])
+    try:
+        calibrations.parameter_values(calibration, laws.get(cost_law).NAMES)
+    except ValueError as error:
+        raise ManifestError(f"calibration: {error}") from None
+    if versions.law(cost_law).calibrated_per == "gpu" and not calibration["law"].get("eta_c_grid"):
+        raise ManifestError(f"calibration: {calibration['name']}: cost law {cost_law} reads each LLM's eta_c off "
+                            "law.eta_c_grid, which this calibration does not have")
+
+
+def resolve(m: Manifest, calibration: Mapping[str, Any], *, sweep: tuple[str, list[str]] | None = None,
+            offline: bool = False) -> Resolved:
+    """Everything a prediction resolves before it fits the workload law, refusing what it cannot run: what
+    `servecast manifest validate` checks once the file itself is valid."""
     if m.traffic is None:
         raise ManifestError("traffic: required by predict: the source of the lengths, the load and the stop rule")
     points = load_points(m, sweep)  # first: a load it cannot run is refused before the workload law is fitted
@@ -284,6 +316,7 @@ def plan(m: Manifest, calibration: Mapping[str, Any], calibration_name: str, cal
     if m.engine.gpu_clock_mhz is not None and m.engine.gpu_clock_mhz != conditions["clock_mhz"]:
         raise ManifestError(f"engine.gpu_clock_mhz: predicting at {m.engine.gpu_clock_mhz} MHz is not supported in "
                             f"this version; the calibration is at {conditions['clock_mhz']} MHz")
+    check_calibration(calibration)
     synthetic = isinstance(m.traffic.source, SyntheticSource)
     components = resolve_components(m, calibration, synthetic)
     llm = resolve_llm(m.engine.model, offline=offline)
@@ -291,24 +324,34 @@ def plan(m: Manifest, calibration: Mapping[str, Any], calibration_name: str, cal
     check_transfer(m, calibration, llm)
     engine, engine_resolved, deployment = resolve_engine(m, gpu, llm)
     p, g, header, warnings, cap = resolve_pool(m, components, engine_resolved["context_length"])
-    law = workload_law(p, g, components["workload_fitter"], cap, block_size=engine.block_size, progress=progress,
-                       seconds=fit_seconds)
-    warnings = [*warnings, *fit_warnings(law)]
+    return Resolved(points=points, components=components, llm=llm, engine=engine, engine_resolved=engine_resolved,
+                    deployment=deployment, pool_p=list(p), pool_g=list(g), pool_header=header,
+                    warnings=list(warnings), phase_cap=cap)
+
+
+def plan(m: Manifest, calibration: Mapping[str, Any], calibration_name: str, calibration_bytes: bytes, *,
+         sweep: tuple[str, list[str]] | None = None, offline: bool = False,
+         progress: Callable[[str], None] | None = None, fit_seconds: float | None = None) -> Plan:
+    """Resolve everything a prediction needs, refusing a manifest it cannot run."""
+    r = resolve(m, calibration, sweep=sweep, offline=offline)
+    assert m.traffic is not None  # resolve refuses a manifest without it
+    law = workload_law(r.pool_p, r.pool_g, r.components["workload_fitter"], r.phase_cap,
+                       block_size=r.engine.block_size, progress=progress, seconds=fit_seconds)
+    warnings = [*r.warnings, *fit_warnings(law)]
     validity = []
-    fitted_on = conditions["fitted_on"]
+    fitted_on = calibration["conditions"]["fitted_on"]
     if versions.law(calibration["law"]["cost_law"]).calibrated_per == "llm_and_gpu":
-        if not _calibrated_on(str(fitted_on), llm):
+        if not _calibrated_on(str(fitted_on), r.llm):
             validity.append(f"a transfer: the calibration was made on {fitted_on}, the prediction is for "
                             f"{m.engine.model}")
     else:
-        validity += coverage_reasons(calibration, calibration_name, llm)
+        validity += coverage_reasons(calibration, calibration_name, r.llm)
     return Plan(calibration=dict(calibration), calibration_name=calibration_name,
-                calibration_sha256=hashlib.sha256(calibration_bytes).hexdigest(), components=components,
-                llm=llm, engine=engine, engine_resolved=engine_resolved, deployment=deployment,
-                pool_p=list(p),
-                pool_g=list(g), pool_sha256=pools.digest(p, g), pool_header=header, law=law,
-                targets=resolve_targets(m, components["estimator"]), points=points,
-                seed=m.traffic.seed, validity=validity, warnings=warnings)
+                calibration_sha256=hashlib.sha256(calibration_bytes).hexdigest(), components=r.components,
+                llm=r.llm, engine=r.engine, engine_resolved=r.engine_resolved, deployment=r.deployment,
+                pool_p=r.pool_p, pool_g=r.pool_g, pool_sha256=pools.digest(r.pool_p, r.pool_g),
+                pool_header=r.pool_header, law=law, targets=resolve_targets(m, r.components["estimator"]),
+                points=r.points, seed=m.traffic.seed, validity=validity, warnings=warnings)
 
 
 #: the LLMs each shipped per-GPU calibration was validated on, beyond the synthetic models it was fitted on: its

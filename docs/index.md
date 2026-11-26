@@ -151,7 +151,7 @@ its throughput limit for this workload.
 
 <div class="sc-flow">
 <svg viewBox="-20 -18 1040 420" role="img" aria-label="The manifest and the GPU's calibration go to servecast predict, which writes prediction.json without a GPU. The same manifest goes to servecast profile serving, which writes measurement.json on the GPU, with the same request pool and the same stopping rule. servecast compare reads both and writes comparison.json.">
-<!-- the icons are Lucide's (ISC License, https://lucide.dev) -->
+<!-- the icons are Lucide's (https://lucide.dev), under the ISC License and, for those derived from Feather, the MIT License; assets/LICENSE-lucide.txt holds both notices, as both licences require -->
 <!-- arrow heads and the cards' shadow -->
   <defs id="sc-flow-defs">
   <marker id="sc-ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>

@@ -7,8 +7,9 @@ name = "servecast"
 version = "0.0.1"
 description = "Predicts LLM serving performance (TTFT, TPOT, throughput) on a GPU running vLLM."
 dynamic = ["readme"]
-license = "Apache-2.0"
-license-files = ["LICENSE"]
+# the code, and the request lengths of two shipped traces (CC-BY-4.0; DATA_LICENSES.md lists every trace's licence)
+license = "Apache-2.0 AND CC-BY-4.0"
+license-files = ["LICENSE", "NOTICE", "DATA_LICENSES.md"]
 requires-python = ">=3.11"
 dependencies = ["typer>=0.29,<1", "pydantic>=2.10,<3", "PyYAML>=6", "numpy>=2.2,<3", "scipy>=1.15,<2"]
 authors = [{ name = "The ServeCast authors" }]
@@ -99,8 +100,9 @@ pattern = 'src="docs/assets/'
 replacement = 'src="https://servecast.github.io/servecast/assets/'
 
 [[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
-pattern = '\(see `LICENSE`\)'
-replacement = '(see [LICENSE](https://github.com/servecast/servecast/blob/v$HFPR_VERSION/LICENSE))'
+# a file of the repository: the one of the tagged release
+pattern = '\]\((LICENSE|NOTICE|DATA_LICENSES\.md)\)'
+replacement = '](https://github.com/servecast/servecast/blob/v$HFPR_VERSION/\1)'
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/servecast"]

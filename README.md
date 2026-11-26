@@ -112,4 +112,5 @@ If you use ServeCast, please cite the paper that introduced it:
 
 ## License
 
-Apache License 2.0 (see `LICENSE`).
+Apache License 2.0 (see [LICENSE](LICENSE) and [NOTICE](NOTICE)). The request lengths of the three shipped traces
+keep their own licences, listed in [DATA_LICENSES.md](DATA_LICENSES.md).

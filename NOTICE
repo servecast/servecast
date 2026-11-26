@@ -1,0 +1,10 @@
+ServeCast
+Copyright 2026 The ServeCast authors
+
+ServeCast is licensed under the Apache License 2.0 (LICENSE).
+
+It ships the request lengths of three public traces, each under its own licence. DATA_LICENSES.md lists them with
+their sources and the changes made to them:
+- Azure Public Dataset, Azure LLM inference trace 2023 (CC-BY-4.0)
+- BurstGPT v2.0 (CC-BY-4.0)
+- ServeGen (Apache-2.0)
